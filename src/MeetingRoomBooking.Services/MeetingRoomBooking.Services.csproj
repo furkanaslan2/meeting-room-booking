@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     <ProjectReference Include="../MeetingRoomBooking.Data/MeetingRoomBooking.Data.csproj" />
   </ItemGroup>
 </Project>
