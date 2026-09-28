@@ -15,12 +15,26 @@ Staj projesi: toplantı odası rezervasyon sistemi. Şu anda proje iskeleti, ver
 3. `Copy-Item src/MeetingRoomBooking.Api/appsettings.Example.json src/MeetingRoomBooking.Api/appsettings.json` çalıştır. Oluşan `appsettings.json` içindeki `YOUR_DB_USER` ve `YOUR_DB_PASSWORD` alanlarını kendi yerel MySQL bilgilerinle değiştir. `Seed:DemoPassword` alanına en az 12 karakterlik ayrı bir test şifresi yaz. Bu dosyayı Git'e ekleme.
 4. Repo kökünde `dotnet restore MeetingRoomBooking.sln` ve `dotnet build MeetingRoomBooking.sln` çalıştır.
 5. `dotnet tool restore` çalıştır.
-6. `dotnet ef migrations add InitialCreate --project src/MeetingRoomBooking.Data --startup-project src/MeetingRoomBooking.Api --output-dir Migrations` çalıştır. Oluşan migration dosyaları Git'e eklenmelidir.
-7. `dotnet ef database update --project src/MeetingRoomBooking.Data --startup-project src/MeetingRoomBooking.Api` çalıştır.
-8. `dotnet run --project src/MeetingRoomBooking.Api --no-launch-profile -- --urls http://localhost:5080` çalıştır.
-9. Tarayıcıda `http://localhost:5080/swagger` ve `http://localhost:5080/api/status` adreslerini aç.
+6. `dotnet ef database update --project src/MeetingRoomBooking.Data --startup-project src/MeetingRoomBooking.Api` çalıştır. Repodaki hazır migration veritabanına uygulanır; yeniden `migrations add InitialCreate` çalıştırma.
+7. `dotnet run --project src/MeetingRoomBooking.Api --no-launch-profile -- --urls http://localhost:5080` çalıştır.
+8. Tarayıcıda `http://localhost:5080/swagger` ve `http://localhost:5080/api/status` adreslerini aç.
 
-`src/MeetingRoomBooking.Api/appsettings.Example.json` yalnızca ayarların biçimini gösterir. Gerçek bağlantı ve JWT sırları Git'e yüklenmez. Migration dosyaları EF Core tarafından oluşturulur; içlerinde şifre olmamalıdır.
+`src/MeetingRoomBooking.Api/appsettings.Example.json` yalnızca ayarların biçimini gösterir. Gerçek bağlantı ve JWT sırları Git'e yüklenmez. `InitialCreate` migration dosyaları repoda bulunur; içlerinde şifre olmamalıdır. Model değişikliği yapıldığında yeni isimli migration oluşturulur.
+
+## Veritabanı şeması
+
+```mermaid
+erDiagram
+    Offices ||--o{ Rooms : contains
+    Offices |o--o{ Users : assigned
+    Users ||--o{ Reservations : organizes
+    Rooms ||--o{ Reservations : booked
+    Rooms ||--o{ RoomEquipment : has
+    Equipment ||--o{ RoomEquipment : assigned
+    Reservations ||--o{ ReservationParticipants : includes
+```
+
+`RevokedTokens` tablosu JWT çıkış işlemleri için ayrılmıştır. Çakışma koruması rezervasyon API'si aşamasında MySQL transaction ve oda satırını `SELECT ... FOR UPDATE` ile kilitleyerek uygulanacaktır. Oluşturma ve düzenleme işlemleri aynı kilit üzerinden geçecek; kilit altındayken aktif rezervasyonların saatleri yeniden kontrol edilecektir.
 
 ## Örnek kullanıcılar
 
