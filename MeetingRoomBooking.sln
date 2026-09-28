@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetingRoomBooking.Api", "src\MeetingRoomBooking.Api\MeetingRoomBooking.Api.csproj", "{86C65ECB-8441-431A-A686-5D2F348FADCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetingRoomBooking.Services", "src\MeetingRoomBooking.Services\MeetingRoomBooking.Services.csproj", "{1A60B748-B8A7-41AD-A389-3189D3A3FD02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetingRoomBooking.Data", "src\MeetingRoomBooking.Data\MeetingRoomBooking.Data.csproj", "{6E6ACDB2-90C4-41C7-82BE-AD2D609D4F71}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86C65ECB-8441-431A-A686-5D2F348FADCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86C65ECB-8441-431A-A686-5D2F348FADCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86C65ECB-8441-431A-A686-5D2F348FADCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86C65ECB-8441-431A-A686-5D2F348FADCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A60B748-B8A7-41AD-A389-3189D3A3FD02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A60B748-B8A7-41AD-A389-3189D3A3FD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A60B748-B8A7-41AD-A389-3189D3A3FD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A60B748-B8A7-41AD-A389-3189D3A3FD02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E6ACDB2-90C4-41C7-82BE-AD2D609D4F71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E6ACDB2-90C4-41C7-82BE-AD2D609D4F71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E6ACDB2-90C4-41C7-82BE-AD2D609D4F71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E6ACDB2-90C4-41C7-82BE-AD2D609D4F71}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
