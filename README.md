@@ -1,6 +1,6 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler ve JWT kimlik doğrulama API'si hazırdır. Oda ve rezervasyon API'leri sonraki aşamalarda eklenecektir.
+Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama ve ofis API'si hazırdır. Oda ve rezervasyon API'leri sonraki aşamalarda eklenecektir.
 
 ## Gerekenler
 
@@ -60,4 +60,14 @@ Uygulama ilk açıldığında 2 ofis, 8 oda, 3 kullanıcı ve 2 örnek rezervasy
 
 Swagger'da önce `POST /api/auth/login` ile giriş yap. Dönen yanıttaki `token` değerini kopyala; sağ üstteki **Authorize** düğmesine yalnızca token'ı yapıştır. Yetki gerektiren endpoint'leri bundan sonra deneyebilirsin. Yanlış rol 403, eksik veya geçersiz token 401 döner. Rol değişince eski token artık kullanılamaz; kullanıcı yeni rolü için tekrar giriş yapar.
 
-Bu aşamada oda ve rezervasyon API'leri ile arayüz henüz uygulanmadı. Çakışma kontrolü rezervasyon aşamasında tamamlanacaktır.
+## Ofis API'si
+
+| Yöntem ve adres | İşlem | Yetki |
+| --- | --- | --- |
+| `GET /api/offices?page=1&pageSize=10` | Ofisleri sayfalı listeler (`items`, `totalCount`) | Giriş gerekli |
+| `GET /api/offices/{id}` | Tek ofisi gösterir | Giriş gerekli |
+| `POST /api/offices` | Ofis oluşturur (`name`, `city`) | Admin |
+| `PUT /api/offices/{id}` | Ofis adı ve şehrini değiştirir | Admin |
+| `DELETE /api/offices/{id}` | Bağlı odası veya kullanıcısı olmayan ofisi siler | Admin |
+
+Bu aşamada oda ve rezervasyon API'leri ile arayüz henüz uygulanmadı. Ofis Yöneticisi'nin sadece kendi ofisinin odalarını değiştirebilmesi oda API'si aşamasında uygulanacak. Çakışma kontrolü rezervasyon aşamasında tamamlanacaktır.
