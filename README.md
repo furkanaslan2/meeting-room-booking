@@ -1,6 +1,6 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama ve ofis API'si hazırdır. Oda ve rezervasyon API'leri sonraki aşamalarda eklenecektir.
+Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama ile ofis ve oda API'leri hazırdır. Rezervasyon API'si sonraki aşamada eklenecektir.
 
 ## Gerekenler
 
@@ -70,4 +70,18 @@ Swagger'da önce `POST /api/auth/login` ile giriş yap. Dönen yanıttaki `token
 | `PUT /api/offices/{id}` | Ofis adı ve şehrini değiştirir | Admin |
 | `DELETE /api/offices/{id}` | Bağlı odası veya kullanıcısı olmayan ofisi siler | Admin |
 
-Bu aşamada oda ve rezervasyon API'leri ile arayüz henüz uygulanmadı. Ofis Yöneticisi'nin sadece kendi ofisinin odalarını değiştirebilmesi oda API'si aşamasında uygulanacak. Çakışma kontrolü rezervasyon aşamasında tamamlanacaktır.
+## Oda ve ekipman API'si
+
+| Yöntem ve adres | İşlem | Yetki |
+| --- | --- | --- |
+| `GET /api/equipment?page=1&pageSize=10` | Ekipmanları sayfalı listeler | Giriş gerekli |
+| `POST /api/equipment` | Ekipman ekler (`name`) | Admin |
+| `GET /api/rooms?page=1&pageSize=10` | Odaları sayfalı listeler | Giriş gerekli |
+| `GET /api/rooms/{id}` | Oda ayrıntılarını ve ekipmanlarını gösterir | Giriş gerekli |
+| `POST /api/rooms` | Oda oluşturur | Admin, kendi ofisinde Ofis Yöneticisi |
+| `PUT /api/rooms/{id}` | Odayı ve ekipmanlarını değiştirir; `isActive` ile pasifleştirebilir | Admin, kendi ofisinde Ofis Yöneticisi |
+| `DELETE /api/rooms/{id}` | Hiç rezervasyonu olmayan odayı siler | Admin, kendi ofisinde Ofis Yöneticisi |
+
+Oda listesi `officeId`, `minCapacity`, `equipmentId` ve `isActive` sorgu parametreleriyle filtrelenebilir. Oda oluşturma gövdesi örneği: `{ "officeId": 1, "name": "Yeni Oda", "capacity": 6, "floor": 2, "isActive": true, "equipmentIds": [1, 3] }`. Güncelleme gövdesinde aynı alanlar kullanılır, ancak odanın `officeId` değeri değiştirilemez. Ekipman ID'lerini `GET /api/equipment` yanıtından al. Rezervasyonu olan odalar silinmez; gerekirse `isActive: false` ile pasifleştirilir.
+
+Bu aşamada rezervasyon API'si, boş oda araması, raporlama ve arayüz henüz uygulanmadı. Eşzamanlı çakışma kontrolü rezervasyon aşamasında tamamlanacaktır.
