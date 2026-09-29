@@ -1,6 +1,6 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler ve JWT kimlik doğrulama API'si hazırdır. Oda ve rezervasyon API'leri sonraki aşamalarda eklenecektir.
+Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama ile ofis ve oda API'leri hazırdır. Rezervasyon API'si sonraki aşamada eklenecektir.
 
 ## Gerekenler
 
@@ -60,4 +60,28 @@ Uygulama ilk açıldığında 2 ofis, 8 oda, 3 kullanıcı ve 2 örnek rezervasy
 
 Swagger'da önce `POST /api/auth/login` ile giriş yap. Dönen yanıttaki `token` değerini kopyala; sağ üstteki **Authorize** düğmesine yalnızca token'ı yapıştır. Yetki gerektiren endpoint'leri bundan sonra deneyebilirsin. Yanlış rol 403, eksik veya geçersiz token 401 döner. Rol değişince eski token artık kullanılamaz; kullanıcı yeni rolü için tekrar giriş yapar.
 
-Bu aşamada oda ve rezervasyon API'leri ile arayüz henüz uygulanmadı. Çakışma kontrolü rezervasyon aşamasında tamamlanacaktır.
+## Ofis API'si
+
+| Yöntem ve adres | İşlem | Yetki |
+| --- | --- | --- |
+| `GET /api/offices?page=1&pageSize=10` | Ofisleri sayfalı listeler (`items`, `totalCount`) | Giriş gerekli |
+| `GET /api/offices/{id}` | Tek ofisi gösterir | Giriş gerekli |
+| `POST /api/offices` | Ofis oluşturur (`name`, `city`) | Admin |
+| `PUT /api/offices/{id}` | Ofis adı ve şehrini değiştirir | Admin |
+| `DELETE /api/offices/{id}` | Bağlı odası veya kullanıcısı olmayan ofisi siler | Admin |
+
+## Oda ve ekipman API'si
+
+| Yöntem ve adres | İşlem | Yetki |
+| --- | --- | --- |
+| `GET /api/equipment?page=1&pageSize=10` | Ekipmanları sayfalı listeler | Giriş gerekli |
+| `POST /api/equipment` | Ekipman ekler (`name`) | Admin |
+| `GET /api/rooms?page=1&pageSize=10` | Odaları sayfalı listeler | Giriş gerekli |
+| `GET /api/rooms/{id}` | Oda ayrıntılarını ve ekipmanlarını gösterir | Giriş gerekli |
+| `POST /api/rooms` | Oda oluşturur | Admin, kendi ofisinde Ofis Yöneticisi |
+| `PUT /api/rooms/{id}` | Odayı ve ekipmanlarını değiştirir; `isActive` ile pasifleştirebilir | Admin, kendi ofisinde Ofis Yöneticisi |
+| `DELETE /api/rooms/{id}` | Hiç rezervasyonu olmayan odayı siler | Admin, kendi ofisinde Ofis Yöneticisi |
+
+Oda listesi `officeId`, `minCapacity`, `equipmentId` ve `isActive` sorgu parametreleriyle filtrelenebilir. Oda oluşturma gövdesi örneği: `{ "officeId": 1, "name": "Yeni Oda", "capacity": 6, "floor": 2, "isActive": true, "equipmentIds": [1, 3] }`. Güncelleme gövdesinde aynı alanlar kullanılır, ancak odanın `officeId` değeri değiştirilemez. Ekipman ID'lerini `GET /api/equipment` yanıtından al. Rezervasyonu olan odalar silinmez; gerekirse `isActive: false` ile pasifleştirilir.
+
+Bu aşamada rezervasyon API'si, boş oda araması, raporlama ve arayüz henüz uygulanmadı. Eşzamanlı çakışma kontrolü rezervasyon aşamasında tamamlanacaktır.
