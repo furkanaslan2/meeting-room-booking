@@ -113,6 +113,7 @@ builder.Services.AddHostedService<DemoDataHostedService>();
 builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IOfficeService, OfficeService>();
 
 var app = builder.Build();
 
