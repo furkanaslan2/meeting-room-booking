@@ -26,6 +26,27 @@ public sealed class RoomService(BookingDbContext database, RoomLockRepository ro
         return new PagedResult<RoomInfo>(rooms.Select(ToInfo).ToList(), page, pageSize, total);
     }
 
+    public async Task<PagedResult<RoomInfo>> SearchAvailableAsync(DateTimeOffset startsAt, DateTimeOffset endsAt,
+        int page, int pageSize, int? officeId, int? minCapacity, int? equipmentId, CancellationToken cancellationToken)
+    {
+        var (startUtc, endUtc) = ReservationTimeRules.Validate(startsAt, endsAt);
+        IQueryable<Room> query = database.Rooms.AsNoTracking().Where(room => room.IsActive &&
+            !room.Reservations.Any(reservation => reservation.Status == ReservationStatus.Active &&
+                reservation.StartUtc < endUtc && startUtc < reservation.EndUtc));
+        if (officeId.HasValue) query = query.Where(room => room.OfficeId == officeId.Value);
+        if (minCapacity.HasValue) query = query.Where(room => room.Capacity >= minCapacity.Value);
+        if (equipmentId.HasValue)
+        {
+            query = query.Where(room => room.RoomEquipment.Any(item => item.EquipmentId == equipmentId.Value));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var rooms = await query.OrderBy(room => room.Id).Skip((page - 1) * pageSize).Take(pageSize)
+            .Include(room => room.RoomEquipment).ThenInclude(item => item.Equipment)
+            .AsSplitQuery().ToListAsync(cancellationToken);
+        return new PagedResult<RoomInfo>(rooms.Select(ToInfo).ToList(), page, pageSize, total);
+    }
+
     public async Task<RoomInfo> GetAsync(int id, CancellationToken cancellationToken)
     {
         var room = await database.Rooms.AsNoTracking()
