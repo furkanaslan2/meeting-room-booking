@@ -10,8 +10,6 @@ namespace MeetingRoomBooking.Services.Implementations;
 
 public sealed class ReservationService(BookingDbContext database, RoomLockRepository roomLocks) : IReservationService
 {
-    private static readonly TimeZoneInfo TurkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-
     public async Task<ReservationInfo> CreateAsync(int organizerId, ReservationInput input, CancellationToken cancellationToken)
     {
         Validate(input);
@@ -240,25 +238,6 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
             throw new ServiceException(400, "INVALID_RESERVATION", "Rezervasyon başlığı veya katılımcılar geçersiz.");
         }
 
-        var startUtc = input.StartsAt.UtcDateTime;
-        var endUtc = input.EndsAt.UtcDateTime;
-        var duration = endUtc - startUtc;
-        if (startUtc <= DateTime.UtcNow)
-        {
-            throw new ServiceException(400, "PAST_RESERVATION", "Geçmiş zamana rezervasyon yapılamaz.");
-        }
-
-        if (duration < TimeSpan.FromMinutes(15) || duration > TimeSpan.FromHours(4))
-        {
-            throw new ServiceException(400, "INVALID_DURATION", "Rezervasyon süresi 15 dakika ile 4 saat arasında olmalıdır.");
-        }
-
-        var localStart = TimeZoneInfo.ConvertTime(input.StartsAt, TurkeyTimeZone);
-        var localEnd = TimeZoneInfo.ConvertTime(input.EndsAt, TurkeyTimeZone);
-        if (localStart.Date != localEnd.Date || localStart.TimeOfDay < TimeSpan.FromHours(8) ||
-            localEnd.TimeOfDay > TimeSpan.FromHours(20))
-        {
-            throw new ServiceException(400, "OUTSIDE_WORK_HOURS", "Rezervasyon Türkiye saatiyle 08:00-20:00 arasında olmalıdır.");
-        }
+        ReservationTimeRules.Validate(input.StartsAt, input.EndsAt);
     }
 }

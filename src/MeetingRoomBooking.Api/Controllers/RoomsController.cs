@@ -27,6 +27,21 @@ public sealed class RoomsController(IRoomService roomService) : ControllerBase
         CancellationToken cancellationToken = default) =>
         await roomService.ListAsync(page, pageSize, officeId, minCapacity, equipmentId, isActive, cancellationToken);
 
+    [HttpGet("available")]
+    [ProducesResponseType(typeof(PagedResult<RoomInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<PagedResult<RoomInfo>> Available(
+        [FromQuery, Required] DateTimeOffset? startsAt,
+        [FromQuery, Required] DateTimeOffset? endsAt,
+        [FromQuery, Range(1, 1000000)] int page = 1,
+        [FromQuery, Range(1, 100)] int pageSize = 10,
+        [FromQuery, Range(1, int.MaxValue)] int? officeId = null,
+        [FromQuery, Range(1, int.MaxValue)] int? minCapacity = null,
+        [FromQuery, Range(1, int.MaxValue)] int? equipmentId = null,
+        CancellationToken cancellationToken = default) =>
+        await roomService.SearchAvailableAsync(startsAt!.Value, endsAt!.Value, page, pageSize,
+            officeId, minCapacity, equipmentId, cancellationToken);
+
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(RoomInfo), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
