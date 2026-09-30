@@ -118,6 +118,7 @@ builder.Services.AddScoped<IOfficeService, OfficeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<RoomLockRepository>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda API'leri, rezervasyon işlemleri ve boş oda araması hazırdır. Raporlama ve arayüz sonraki aşamalardadır.
+Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda ve rezervasyon API'leri, boş oda araması ve oda kullanım raporu hazırdır. Arayüz sonraki aşamadadır.
 
 ## Gerekenler
 
@@ -103,4 +103,10 @@ Arama yalnızca aktif odaları döndürür. Aktif rezervasyonlardan aralıkla ke
 | `PUT /api/reservations/{id}` | Oda, saat, başlık ve katılımcıları değiştirir | Admin; kendi ofisinde Ofis Yöneticisi; kendi kaydında Çalışan |
 | `DELETE /api/reservations/{id}` | Rezervasyonu iptal eder; 204 döner | Aynı düzenleme yetkileri |
 
-`PUT` gövdesi `POST` ile aynıdır. Oda değişirse Ofis Yöneticisi yalnızca kendi ofisindeki bir odayı hedefleyebilir. İptal edilmiş kayıt düzenlenemez (409 `RESERVATION_CANCELLED`); ikinci kez iptal etmek de 204 döner. Çakışma 409 `ROOM_CONFLICT` döner. Eşzamanlı oluşturma ve düzenleme yerel MySQL üzerinde denenmiştir (sırasıyla 201/409 ve 200/409); iptalin eşzamanlı etkileşimi ayrıca sınanmamıştır. Raporlama ve arayüz sonraki adımlardadır.
+`PUT` gövdesi `POST` ile aynıdır. Oda değişirse Ofis Yöneticisi yalnızca kendi ofisindeki bir odayı hedefleyebilir. İptal edilmiş kayıt düzenlenemez (409 `RESERVATION_CANCELLED`); ikinci kez iptal etmek de 204 döner. Çakışma 409 `ROOM_CONFLICT` döner. Eşzamanlı oluşturma ve düzenleme yerel MySQL üzerinde denenmiştir (sırasıyla 201/409 ve 200/409); iptalin eşzamanlı etkileşimi ayrıca sınanmamıştır. Arayüz sonraki aşamadadır.
+
+## Oda kullanım raporu
+
+`GET /api/reports/rooms?page=1&pageSize=10` son 30 Türkiye takvim günü için oda bazında `reservationCount`, `occupiedMinutes` ve `occupancyPercent` değerlerini döndürür. Yanıtta ayrıca `periodStartUtc`, `periodEndUtc`, `availableWorkMinutes`, `items`, `page`, `pageSize` ve `totalCount` bulunur. Odalar dolu dakika sayısına göre çoktan aza sıralanır; bu sıra en çok kullanılan odaları gösterir. `officeId` parametresi isteğe bağlıdır. Admin tüm ofisleri veya seçilen ofisi görür; Ofis Yöneticisi yalnızca kendi ofisini görebilir. Çalışan 403 alır.
+
+Rapor bugün dahil son 30 takvim gününü kapsar. Doluluk oranı, bu aralıktaki gerçekleşmiş aktif rezervasyon dakikalarının Türkiye saatiyle her gün 08:00-20:00 arasındaki **geçmiş** toplam dakikalara oranıdır; bugün henüz geçmeyen mesai saatleri hesaba katılmaz. Hafta sonları da sayılır çünkü rezervasyon kuralları haftanın günlerini sınırlamaz. Gelecekteki rezervasyonlar ve iptal edilen kayıtlar sayılmaz. İptal edilmiş bir toplantının geçmişte gerçekten yapılıp yapılmadığını mevcut veri modeli söylemediğinden, iptal edildiğinde geçmiş rapordan da düşer. Rapor iki toplu veritabanı sorgusu ve bellekte toplama kullanır; değerlendirme verisi ölçeği için tasarlanmıştır.
