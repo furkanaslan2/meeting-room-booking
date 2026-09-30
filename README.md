@@ -1,6 +1,6 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda API'leri ve rezervasyon oluşturma API'si hazırdır. Diğer rezervasyon işlemleri sonraki aşamalarda eklenecektir.
+Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda API'leri ve rezervasyon oluşturma/listeleme/düzenleme/iptal API'leri hazırdır. Boş oda araması, raporlama ve arayüz sonraki aşamalardadır.
 
 ## Gerekenler
 
@@ -34,7 +34,7 @@ erDiagram
     Reservations ||--o{ ReservationParticipants : includes
 ```
 
-`RevokedTokens` tablosu JWT çıkış işlemleri için ayrılmıştır. Rezervasyon oluşturma işleminde `READ COMMITTED` MySQL transaction başlatılır ve ilgili `Rooms` satırı `SELECT ... FOR UPDATE` ile kilitlenir. Aktif rezervasyonların çakışması (`StartUtc < yeniBitiş` ve `EndUtc > yeniBaşlangıç`) kilit tutulurken sorgulanır; yeni rezervasyon ve katılımcıları aynı transaction içinde kaydedilip ardından commit edilir. Aynı odaya gelen ikinci istek kilit açılana kadar bekler, sonra güncel rezervasyonları görür ve çakışıyorsa 409 `ROOM_CONFLICT` döner. Oda kapasitesini veya aktifliğini değiştiren ve oda silen işlemler de aynı satır kilidini kullanır. `READ COMMITTED`, kilit beklemesi bittikten sonraki okumanın yeni bir görünüm almasını sağlar. Bu yöntem yalnızca tüm rezervasyon yazma yolları kilidi kullandığında tam garantidir; düzenleme/iptal yolları henüz eklenmedi.
+`RevokedTokens` tablosu JWT çıkış işlemleri için ayrılmıştır. Rezervasyon oluşturma işleminde `READ COMMITTED` MySQL transaction başlatılır ve ilgili `Rooms` satırı `SELECT ... FOR UPDATE` ile kilitlenir. Aktif rezervasyonların çakışması (`StartUtc < yeniBitiş` ve `EndUtc > yeniBaşlangıç`) kilit tutulurken sorgulanır; yeni rezervasyon ve katılımcıları aynı transaction içinde kaydedilip ardından commit edilir. Aynı odaya gelen ikinci istek kilit açılana kadar bekler, sonra güncel rezervasyonları görür ve çakışıyorsa 409 `ROOM_CONFLICT` döner. Düzenleme işleminde eski ve yeni odanın satırları ID sırasıyla kilitlenir; önce mevcut rezervasyonun yeri tekrar okunur, sonra hedef odanın çakışma/kapasite kuralları kontrol edilir. İptal de oda kilidini kullanır ve satırı silmek yerine `Cancelled` durumuna geçirir. Oda kapasitesini veya aktifliğini değiştiren ve oda silen işlemler de aynı satır kilidini kullanır. `READ COMMITTED`, kilit beklemesi bittikten sonraki okumanın yeni bir görünüm almasını sağlar. Bu garanti, uygulamanın bütün rezervasyon yazma yolları aynı kilit düzenini kullandığında geçerlidir; veritabanına uygulamayı atlayarak yapılan doğrudan yazmalar bu kurala tabi değildir.
 
 ## Örnek kullanıcılar
 
@@ -84,8 +84,17 @@ Swagger'da önce `POST /api/auth/login` ile giriş yap. Dönen yanıttaki `token
 
 Oda listesi `officeId`, `minCapacity`, `equipmentId` ve `isActive` sorgu parametreleriyle filtrelenebilir. Oda oluşturma gövdesi örneği: `{ "officeId": 1, "name": "Yeni Oda", "capacity": 6, "floor": 2, "isActive": true, "equipmentIds": [1, 3] }`. Güncelleme gövdesinde aynı alanlar kullanılır, ancak odanın `officeId` değeri değiştirilemez. Ekipman ID'lerini `GET /api/equipment` yanıtından al. Rezervasyonu olan odalar silinmez; gerekirse `isActive: false` ile pasifleştirilir.
 
-## Rezervasyon oluşturma (ilk parça)
+## Rezervasyon API'si
 
 `POST /api/reservations` tüm giriş yapan roller tarafından kullanılabilir. Örnek gövde: `{ "roomId": 1, "startsAt": "2026-10-01T10:00:00+03:00", "endsAt": "2026-10-01T11:00:00+03:00", "title": "Planlama", "participants": [{ "name": "Deneme Katılımcı", "email": "katilimci@example.test" }] }`. Tarihi deneme gününe göre gelecekte bir güne değiştir. Saatlere açıkça `+03:00` ekle. Sunucu tarihleri UTC'ye dönüştürür; yanıt UTC saatini içerir. Türkiye saatine göre 08:00-20:00, 15 dakika-4 saat, geçmiş zaman yasağı ve oda kapasitesi kontrol edilir. Kapasite hesabına toplantıyı düzenleyen kişi de dahildir. Pasif oda için 409 `ROOM_INACTIVE`, çakışma için 409 `ROOM_CONFLICT` dönülür.
 
-Rezervasyon listeleme, düzenleme, iptal, boş oda araması, raporlama ve arayüz sonraki adımlardadır. Düzenleme ve iptal aynı oda kilidi üzerinden uygulanıp eşzamanlılık doğrulanmadan projenin çakışma garantisi tamamlanmış sayılmaz.
+| Yöntem ve adres | İşlem | Görünürlük / yetki |
+| --- | --- | --- |
+| `GET /api/reservations?page=1&pageSize=10` | Rezervasyonları sayfalı listeler | Admin: tümü; Ofis Yöneticisi: kendi ofisi; Çalışan: kendi kayıtları |
+| `GET /api/reservations/mine?page=1&pageSize=10` | Kendi rezervasyonlarını listeler | Giriş gerekli |
+| `GET /api/reservations/{id}` | Tek rezervasyonu gösterir | Aynı rol kapsamı |
+| `POST /api/reservations` | Rezervasyon oluşturur | Giriş gerekli |
+| `PUT /api/reservations/{id}` | Oda, saat, başlık ve katılımcıları değiştirir | Admin; kendi ofisinde Ofis Yöneticisi; kendi kaydında Çalışan |
+| `DELETE /api/reservations/{id}` | Rezervasyonu iptal eder; 204 döner | Aynı düzenleme yetkileri |
+
+`PUT` gövdesi `POST` ile aynıdır. Oda değişirse Ofis Yöneticisi yalnızca kendi ofisindeki bir odayı hedefleyebilir. İptal edilmiş kayıt düzenlenemez (409 `RESERVATION_CANCELLED`); ikinci kez iptal etmek de 204 döner. Çakışma 409 `ROOM_CONFLICT` döner. Eşzamanlı oluşturma ve düzenleme yerel MySQL üzerinde denenmiştir (sırasıyla 201/409 ve 200/409); iptalin eşzamanlı etkileşimi ayrıca sınanmamıştır. Boş oda araması, raporlama ve arayüz sonraki adımlardadır.
