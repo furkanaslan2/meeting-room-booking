@@ -28,5 +28,5 @@ public sealed class CreateReservationRequest
     public List<ReservationParticipantRequest> Participants { get; init; } = [];
 
     public ReservationInput ToInput() => new(RoomId, StartsAt, EndsAt, Title,
-        Participants.Select(x => new ParticipantInput(x.Name, x.Email)).ToList());
+        Participants?.Select(x => new ParticipantInput(x?.Name ?? string.Empty, x?.Email)).ToList() ?? []);
 }
