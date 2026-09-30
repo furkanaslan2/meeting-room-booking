@@ -1,12 +1,14 @@
+using System.Data;
 using MeetingRoomBooking.Data;
 using MeetingRoomBooking.Data.Entities;
+using MeetingRoomBooking.Data.Repositories;
 using MeetingRoomBooking.Services.Interfaces;
 using MeetingRoomBooking.Services.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MeetingRoomBooking.Services.Implementations;
 
-public sealed class RoomService(BookingDbContext database) : IRoomService
+public sealed class RoomService(BookingDbContext database, RoomLockRepository roomLocks) : IRoomService
 {
     public async Task<PagedResult<RoomInfo>> ListAsync(int page, int pageSize, int? officeId, int? minCapacity,
         int? equipmentId, bool? isActive, CancellationToken cancellationToken)
@@ -77,6 +79,11 @@ public sealed class RoomService(BookingDbContext database) : IRoomService
 
     public async Task<RoomInfo> UpdateAsync(int actorId, int id, RoomInput input, CancellationToken cancellationToken)
     {
+        await using var transaction = await database.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
+        if (await roomLocks.LockAsync(id, cancellationToken) is null)
+        {
+            throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
+        }
         var room = await database.Rooms.Include(x => x.RoomEquipment)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
@@ -121,11 +128,17 @@ public sealed class RoomService(BookingDbContext database) : IRoomService
             throw;
         }
 
+        await transaction.CommitAsync(cancellationToken);
         return await GetAsync(id, cancellationToken);
     }
 
     public async Task DeleteAsync(int actorId, int id, CancellationToken cancellationToken)
     {
+        await using var transaction = await database.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
+        if (await roomLocks.LockAsync(id, cancellationToken) is null)
+        {
+            throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
+        }
         var room = await database.Rooms.SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
         await EnsureCanManageAsync(actorId, room.OfficeId, cancellationToken);
@@ -143,6 +156,7 @@ public sealed class RoomService(BookingDbContext database) : IRoomService
         {
             throw new ServiceException(409, "ROOM_IN_USE", "Odaya bağlı kayıtlar var; pasif hale getirin.");
         }
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<PagedResult<EquipmentInfo>> ListEquipmentAsync(int page, int pageSize, CancellationToken cancellationToken)
