@@ -4,6 +4,7 @@ using MeetingRoomBooking.Api.Middleware;
 using MeetingRoomBooking.Data;
 using MeetingRoomBooking.Api.Infrastructure;
 using MeetingRoomBooking.Data.Entities;
+using MeetingRoomBooking.Data.Repositories;
 using MeetingRoomBooking.Services.Implementations;
 using MeetingRoomBooking.Services.Interfaces;
 using MeetingRoomBooking.Services.Models;
@@ -115,6 +116,8 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOfficeService, OfficeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<RoomLockRepository>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
 var app = builder.Build();
 
