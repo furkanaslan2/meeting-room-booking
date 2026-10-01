@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Odalar | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/rooms.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"> <span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a class="nav-current" href="/rooms.html" aria-current="page">Odalar</a>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">TOPLANTI ALANLARI</span>
+      <h1 id="page-title">Size uygun odayı bulun.</h1>
+      <p>Ofis, kişi sayısı ve ekipmana göre odaları keşfedin. Bir zaman seçerek o saatte boş olanları görebilirsiniz.</p>
+    </section>
+
+    <section class="filter-panel" aria-labelledby="filter-title">
+      <div class="section-heading"><h2 id="filter-title">Oda ara</h2><span>Filtreleri seçip Ara'ya basın.</span></div>
+      <form id="room-filters">
+        <div class="filter-grid">
+          <div class="field"><label for="office-filter">Ofis</label><select id="office-filter"><option value="">Tüm ofisler</option></select></div>
+          <div class="field"><label for="capacity-filter">En az kişi</label><input id="capacity-filter" type="number" min="1" step="1" placeholder="Örn. 6"></div>
+          <div class="field"><label for="equipment-filter">Ekipman</label><select id="equipment-filter"><option value="">Tüm ekipmanlar</option></select></div>
+        </div>
+        <div class="filter-options">
+          <label class="checkbox-label"><input id="available-only" type="checkbox"> Seçilen saatte boş odalar</label>
+          <label id="inactive-option" class="checkbox-label" hidden><input id="show-inactive" type="checkbox"> Pasif odaları da göster</label>
+        </div>
+        <div id="time-fields" class="filter-grid time-fields" hidden>
+          <div class="field"><label for="start-time">Başlangıç (Türkiye saati)</label><input id="start-time" type="datetime-local" step="60"></div>
+          <div class="field"><label for="end-time">Bitiş (Türkiye saati)</label><input id="end-time" type="datetime-local" step="60"></div>
+        </div>
+        <button id="search-button" class="primary-button filter-submit" type="submit">Odaları göster <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    <section class="results" aria-labelledby="results-title">
+      <div class="section-heading results-heading"><div><span class="eyebrow accent">SONUÇLAR</span><h2 id="results-title">Odalar</h2></div><p id="result-count" role="status" aria-live="polite"></p></div>
+      <p id="room-notice" class="notice" role="alert" hidden></p>
+      <div id="room-list" class="room-grid" aria-busy="false"></div>
+      <p id="empty-message" class="empty-message" hidden>Bu filtrelere uygun oda bulunamadı. Farklı bir saat veya filtre deneyin.</p>
+      <div id="pagination" class="pagination" hidden>
+        <button id="previous-page" type="button">← Önceki</button>
+        <span id="page-label"></span>
+        <button id="next-page" type="button">Sonraki →</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
