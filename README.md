@@ -1,6 +1,6 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda ve rezervasyon API'leri, boş oda araması, oda kullanım raporu ve giriş/kayıt arayüzü hazırdır. Diğer arayüz ekranları sonraki aşamalardadır.
+Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda ve rezervasyon API'leri, boş oda araması, oda kullanım raporu, giriş/kayıt ve oda listesi arayüzleri hazırdır. Diğer arayüz ekranları sonraki aşamalardadır.
 
 ## Gerekenler
 
@@ -115,4 +115,6 @@ Rapor bugün dahil son 30 takvim gününü kapsar. Doluluk oranı, bu aralıktak
 
 API çalışırken `http://localhost:5080/` adresini aç. Giriş bölümünde örnek kullanıcıların e-posta adreslerini ve kendi yerel `Seed:DemoPassword` şifreni kullanabilirsin. Kayıt bölümünde ad soyad, e-posta ve en az 12 karakterlik şifre gir; yeni hesap Çalışan rolüyle açılır. Başarılı giriş/kayıttan sonra hesap bilgileri görünür; Çıkış yap düğmesi JWT'yi sunucuda geçersiz kılar. Yenilemede `/api/auth/me` ile oturum tekrar doğrulanır. Token yalnızca sekmenin `sessionStorage` alanında tutulur, repoya yazılmaz. `wwwroot/js/api.js` tüm `fetch` çağrılarını ve JSON hata mesajlarını bir araya toplar; `wwwroot/js/auth.js` yalnızca bu sayfanın davranışını yönetir. HTML/CSS/JS dışında frontend kütüphanesi yoktur.
 
-Oda listesi, rezervasyon formu, Rezervasyonlarım, haftalık takvim ve rol menüsü sonraki arayüz aşamalarında eklenecektir.
+Girişten sonra **Odaları görüntüle** düğmesi `/rooms.html` sayfasını açar. Sayfa aktif odaları dörderli listeler; ofis, en az kişi sayısı ve ekipmana göre filtreler. **Seçilen saatte boş odalar** seçildiğinde başlangıç ve bitiş alanları açılır. Bu alanlara Türkiye saatiyle tarih/saat girilir; sayfa `+03:00` zaman dilimiyle `/api/rooms/available` adresine istek gönderir. Sonraki/Önceki düğmeleriyle sayfalar gezilir. Yönetici rollerinde pasif odaları listeleme seçeneği de görünür. API çağrıları yine yalnızca ortak `api.js` üzerinden yapılır; `rooms.js` oda sayfasına özeldir. Arama sonucu anlıktır; rezervasyon kaydında çakışma tekrar denetlenir.
+
+Rezervasyon formu, Rezervasyonlarım, haftalık takvim ve tam rol menüsü sonraki arayüz aşamalarında eklenecektir.
