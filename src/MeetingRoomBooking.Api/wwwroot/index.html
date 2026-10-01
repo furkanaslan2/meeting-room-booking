@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Toplantı Odası Rezervasyonu</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/auth.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <section class="intro" aria-labelledby="site-title">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</div>
+      <div class="intro-copy">
+        <span class="eyebrow">OFİSİNİZİN ORTAK ALANI</span>
+        <h1 id="site-title">İyi toplantılar, doğru odada başlar.</h1>
+        <p>Ekibinize uygun bir alan bulun, zamanınızı planlayın ve toplantılarınızı tek yerden yönetin.</p>
+      </div>
+      <div class="preview" aria-hidden="true">
+        <div class="preview-heading"><span>Bugünün akışı</span><span class="preview-dots">● ● ●</span></div>
+        <div class="preview-row"><span class="preview-time">09:00</span><span class="preview-line"></span><span class="preview-card">Ekip buluşması</span></div>
+        <div class="preview-row"><span class="preview-time">11:30</span><span class="preview-line"></span><span class="preview-card light">Proje görüşmesi</span></div>
+        <div class="preview-row"><span class="preview-time">14:00</span><span class="preview-line"></span><span class="preview-card warm">Planlama</span></div>
+      </div>
+      <p class="intro-foot">Birlikte çalışmak için yer açın.</p>
+    </section>
+
+    <section class="account" aria-label="Hesabınız">
+      <div class="account-inner">
+        <div id="guest-view">
+          <span class="eyebrow accent">HESABINIZ</span>
+          <h2 id="account-title">Hoş geldiniz</h2>
+          <p class="muted">Devam etmek için giriş yapın veya yeni bir hesap açın.</p>
+          <div class="tabs" role="tablist" aria-label="Hesap işlemi">
+            <button id="login-tab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="login-form">Giriş yap</button>
+            <button id="register-tab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="register-form">Kayıt ol</button>
+          </div>
+
+          <form id="login-form" class="form" role="tabpanel" aria-labelledby="login-tab">
+            <label for="login-email">E-posta</label>
+            <input id="login-email" name="email" type="email" autocomplete="username" required>
+            <label for="login-password">Şifre</label>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+            <button class="primary-button" type="submit">Giriş yap <span aria-hidden="true">→</span></button>
+          </form>
+
+          <form id="register-form" class="form" role="tabpanel" aria-labelledby="register-tab" hidden>
+            <label for="register-name">Ad soyad</label>
+            <input id="register-name" name="fullName" type="text" minlength="2" maxlength="150" autocomplete="name" required>
+            <label for="register-email">E-posta</label>
+            <input id="register-email" name="email" type="email" autocomplete="email" required>
+            <label for="register-password">Şifre</label>
+            <input id="register-password" name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required>
+            <p class="field-hint">En az 12 karakter kullanın.</p>
+            <label for="register-password-repeat">Şifreyi tekrar girin</label>
+            <input id="register-password-repeat" name="passwordRepeat" type="password" minlength="12" autocomplete="new-password" required>
+            <button class="primary-button" type="submit">Hesap aç <span aria-hidden="true">→</span></button>
+          </form>
+        </div>
+
+        <div id="account-view" hidden>
+          <span class="eyebrow accent">OTURUM AÇIK</span>
+          <h2 id="welcome-name">Hoş geldiniz</h2>
+          <p class="muted">Toplantı alanınızı planlamaya hazırsınız.</p>
+          <div class="profile">
+            <span class="profile-avatar" aria-hidden="true">●</span>
+            <div><strong id="profile-role"></strong><span id="profile-email"></span></div>
+          </div>
+          <button id="logout-button" class="outline-button" type="button">Çıkış yap</button>
+        </div>
+
+        <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
