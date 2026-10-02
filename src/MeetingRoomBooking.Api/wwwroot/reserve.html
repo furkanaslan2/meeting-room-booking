@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Rezervasyon oluştur | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/reserve.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a href="/rooms.html">Odalar</a>
+        <span class="nav-current" aria-current="page">Rezervasyon oluştur</span>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content reservation-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">YENİ REZERVASYON</span>
+      <h1 id="page-title">Toplantınıza yer açın.</h1>
+      <p>Odayı, Türkiye saatine göre zaman aralığını ve katılımcıları belirleyin.</p>
+    </section>
+
+    <p id="booking-notice" class="notice" role="alert" hidden></p>
+    <section id="booking-panel" class="filter-panel" aria-labelledby="booking-title" hidden>
+      <div class="section-heading"><h2 id="booking-title">Rezervasyon bilgileri</h2><span>En az 15 dakika, en fazla 4 saat</span></div>
+      <div id="selected-room" class="selected-room" aria-live="polite"></div>
+      <form id="booking-form">
+        <div class="field"><label for="booking-title-input">Toplantı başlığı</label><input id="booking-title-input" type="text" maxlength="200" required placeholder="Örn. Proje planlama"></div>
+        <div class="filter-grid time-fields">
+          <div class="field"><label for="booking-start">Başlangıç (Türkiye saati)</label><input id="booking-start" type="datetime-local" step="60" required></div>
+          <div class="field"><label for="booking-end">Bitiş (Türkiye saati)</label><input id="booking-end" type="datetime-local" step="60" required></div>
+        </div>
+        <p class="booking-hint">Aynı gün 08:00–20:00 arasında olmalı. Kişi sayısına toplantıyı düzenleyen siz de dahilsiniz.</p>
+        <div class="participant-heading"><h3>Katılımcılar</h3><button id="add-participant" class="secondary-button" type="button">+ Katılımcı ekle</button></div>
+        <p id="capacity-hint" class="booking-hint"></p>
+        <div id="participant-list" class="participant-list"></div>
+        <button id="book-button" class="primary-button filter-submit" type="submit">Rezervasyonu oluştur <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+    <section id="booking-success" class="booking-success" aria-live="polite" hidden>
+      <span class="eyebrow accent">TAMAMLANDI</span>
+      <h2>Odanız ayrıldı.</h2>
+      <p id="booking-summary"></p>
+      <a class="room-book-link" href="/rooms.html">Odaları görüntüle →</a>
+    </section>
+  </main>
+</body>
+</html>
