@@ -83,6 +83,18 @@ function createRoomCard(room) {
   }
 
   card.append(top, heading, details, equipment);
+  if (room.isActive) {
+    const link = document.createElement("a");
+    link.className = "room-book-link";
+    const params = new URLSearchParams({ roomId: String(room.id) });
+    if (availableOnly.checked && startTime.value && endTime.value) {
+      params.set("startsAt", startTime.value);
+      params.set("endsAt", endTime.value);
+    }
+    link.href = `/reserve.html?${params}`;
+    link.textContent = "Bu odayı rezerve et →";
+    card.append(link);
+  }
   return card;
 }
 
