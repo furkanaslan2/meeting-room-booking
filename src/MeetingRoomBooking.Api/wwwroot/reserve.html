@@ -14,6 +14,7 @@
       <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
       <nav class="app-nav" aria-label="Ana menü">
         <a href="/rooms.html">Odalar</a>
+        <a href="/mine.html">Rezervasyonlarım</a>
         <span class="nav-current" aria-current="page">Rezervasyon oluştur</span>
         <a href="/">Hesabım</a>
       </nav>
@@ -23,7 +24,7 @@
 
   <main class="app-content reservation-content">
     <section class="page-intro" aria-labelledby="page-title">
-      <span class="eyebrow accent">YENİ REZERVASYON</span>
+      <span id="booking-eyebrow" class="eyebrow accent">YENİ REZERVASYON</span>
       <h1 id="page-title">Toplantınıza yer açın.</h1>
       <p>Odayı, Türkiye saatine göre zaman aralığını ve katılımcıları belirleyin.</p>
     </section>
@@ -47,9 +48,9 @@
     </section>
     <section id="booking-success" class="booking-success" aria-live="polite" hidden>
       <span class="eyebrow accent">TAMAMLANDI</span>
-      <h2>Odanız ayrıldı.</h2>
+      <h2 id="success-title">Odanız ayrıldı.</h2>
       <p id="booking-summary"></p>
-      <a class="room-book-link" href="/rooms.html">Odaları görüntüle →</a>
+      <a class="room-book-link" href="/mine.html">Rezervasyonlarımı görüntüle →</a>
     </section>
   </main>
 </body>

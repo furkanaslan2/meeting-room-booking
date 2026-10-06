@@ -2,6 +2,8 @@ import { apiRequest, clearToken, getToken } from "./api.js";
 
 const params = new URLSearchParams(location.search);
 const roomId = Number(params.get("roomId"));
+const isEditing = params.has("reservationId");
+const reservationId = Number(params.get("reservationId"));
 const notice = document.querySelector("#booking-notice");
 const panel = document.querySelector("#booking-panel");
 const form = document.querySelector("#booking-form");
@@ -37,6 +39,15 @@ function turkeyDisplay(value) {
   }).format(new Date(value));
 }
 
+function turkeyInput(value) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(new Date(value));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+}
+
 function updateCapacityHint() {
   const guests = participantList.children.length;
   document.querySelector("#capacity-hint").textContent =
@@ -44,8 +55,8 @@ function updateCapacityHint() {
   addParticipantButton.disabled = guests >= room.capacity - 1;
 }
 
-function addParticipant(name = "", email = "") {
-  if (participantList.children.length >= room.capacity - 1) return;
+function addParticipant(name = "", email = "", existing = false) {
+  if (!existing && participantList.children.length >= room.capacity - 1) return;
   const row = document.createElement("div");
   row.className = "participant-row";
 
@@ -75,7 +86,7 @@ function addParticipant(name = "", email = "") {
   row.append(nameField, emailField, remove);
   participantList.append(row);
   updateCapacityHint();
-  nameInput.focus();
+  if (!existing) nameInput.focus();
 }
 
 function validateTimes(start, end) {
@@ -115,8 +126,8 @@ form.addEventListener("submit", async (event) => {
   bookButton.disabled = true;
   bookButton.textContent = "Kaydediliyor...";
   try {
-    const result = await apiRequest("/api/reservations", {
-      method: "POST", body: {
+    const result = await apiRequest(isEditing ? `/api/reservations/${reservationId}` : "/api/reservations", {
+      method: isEditing ? "PUT" : "POST", body: {
         roomId: room.id, title, startsAt: `${start}:00+03:00`, endsAt: `${end}:00+03:00`, participants
       }
     });
@@ -128,7 +139,7 @@ form.addEventListener("submit", async (event) => {
     if (error.status === 401) { location.replace("/"); return; }
     showNotice(error.message || "Rezervasyon oluşturulamadı.");
     bookButton.disabled = false;
-    bookButton.textContent = "Rezervasyonu oluştur →";
+    bookButton.textContent = isEditing ? "Değişiklikleri kaydet →" : "Rezervasyonu oluştur →";
   }
 });
 
@@ -154,6 +165,10 @@ async function initialize() {
     showNotice("Rezervasyon oluşturmak için önce oda listesinden bir oda seçin.");
     return;
   }
+  if (isEditing && (!Number.isSafeInteger(reservationId) || reservationId <= 0)) {
+    showNotice("Geçersiz rezervasyon numarası.");
+    return;
+  }
 
   const tomorrow = turkeyDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
   startInput.value = localDateTime(params.get("startsAt")) || `${tomorrow}T10:00`;
@@ -168,6 +183,25 @@ async function initialize() {
     document.querySelector("#selected-room").textContent =
       `${room.name} · ${room.capacity} kişi · ${room.floor}. kat`;
     updateCapacityHint();
+    if (isEditing) {
+      const reservation = await apiRequest(`/api/reservations/${reservationId}`);
+      if (reservation.roomId !== room.id || reservation.status !== "Active" ||
+          Date.parse(reservation.startsAtUtc) <= Date.now()) {
+        showNotice("Bu rezervasyon artık düzenlenemiyor. Listeyi yenileyip tekrar deneyin.");
+        return;
+      }
+      document.querySelector("#booking-eyebrow").textContent = "REZERVASYONU DÜZENLE";
+      document.querySelector("#page-title").textContent = "Toplantınızı güncelleyin.";
+      document.querySelector("#booking-title").textContent = "Rezervasyon bilgilerini düzenle";
+      document.querySelector("#success-title").textContent = "Değişiklikler kaydedildi.";
+      titleInput.value = reservation.title;
+      startInput.value = turkeyInput(reservation.startsAtUtc);
+      endInput.value = turkeyInput(reservation.endsAtUtc);
+      for (const participant of reservation.participants) {
+        addParticipant(participant.name, participant.email || "", true);
+      }
+      bookButton.textContent = "Değişiklikleri kaydet →";
+    }
     panel.hidden = false;
   } catch (error) {
     if (error.status === 401) { location.replace("/"); return; }
