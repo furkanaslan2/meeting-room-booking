@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Rezervasyonlarım | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/mine.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a href="/rooms.html">Odalar</a>
+        <a class="nav-current" href="/mine.html" aria-current="page">Rezervasyonlarım</a>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">TOPLANTILARINIZ</span>
+      <h1 id="page-title">Rezervasyonlarım</h1>
+      <p>Toplantılarınızı Türkiye saatiyle görüntüleyin. Gelecekteki aktif rezervasyonlarınızı düzenleyebilir veya iptal edebilirsiniz.</p>
+    </section>
+
+    <section class="results" aria-labelledby="results-title">
+      <div class="section-heading results-heading"><div><span class="eyebrow accent">KAYITLAR</span><h2 id="results-title">Toplantılar</h2></div><p id="reservation-count" role="status" aria-live="polite"></p></div>
+      <p id="mine-notice" class="notice" role="status" aria-live="polite" hidden></p>
+      <div id="reservation-list" class="reservation-list" aria-busy="false"></div>
+      <p id="empty-message" class="empty-message" hidden>Henüz rezervasyonunuz yok. <a href="/rooms.html">Bir oda bulun.</a></p>
+      <div id="pagination" class="pagination" hidden>
+        <button id="previous-page" type="button">← Önceki</button>
+        <span id="page-label"></span>
+        <button id="next-page" type="button">Sonraki →</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
