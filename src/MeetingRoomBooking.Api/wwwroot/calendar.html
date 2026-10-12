@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Haftalık takvim | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/calendar.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a href="/rooms.html">Odalar</a>
+        <a href="/mine.html">Rezervasyonlarım</a>
+        <span class="nav-current" aria-current="page">Takvim</span>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">ODA TAKVİMİ</span>
+      <h1 id="page-title">Haftalık doluluk</h1>
+      <p id="room-details">Oda bilgileri yükleniyor...</p>
+    </section>
+
+    <section class="calendar-panel" aria-labelledby="calendar-title">
+      <div class="calendar-controls">
+        <div><span class="eyebrow accent">TÜRKİYE SAATİ</span><h2 id="calendar-title">Haftalık takvim</h2><p id="week-label" role="status" aria-live="polite"></p></div>
+        <div class="calendar-buttons">
+          <button id="previous-week" class="secondary-button" type="button">← Önceki hafta</button>
+          <button id="current-week" class="secondary-button" type="button">Bu hafta</button>
+          <button id="next-week" class="secondary-button" type="button">Sonraki hafta →</button>
+          <button id="refresh-calendar" class="secondary-button" type="button">Yenile</button>
+        </div>
+      </div>
+      <p id="calendar-notice" class="notice" role="alert" hidden></p>
+      <div class="calendar-legend"><span class="calendar-legend-mark" aria-hidden="true"></span> Dolu saatler</div>
+      <p class="calendar-hint">08:00–20:00 aralığı gösterilir. Dar ekranda takvimi sağa kaydırabilirsiniz.</p>
+      <div class="calendar-scroll" tabindex="0" aria-label="Haftalık oda takvimi, yatay kaydırılabilir">
+        <div id="calendar-board" class="calendar-board" aria-busy="false"></div>
+      </div>
+      <p id="calendar-empty" class="empty-message" hidden>Bu hafta odada aktif rezervasyon yok.</p>
+      <h3 class="calendar-list-title">Dolu zaman aralıkları</h3>
+      <ul id="busy-list" class="calendar-busy-list"></ul>
+      <a id="calendar-book" class="room-book-link" href="/rooms.html" hidden>Bu odayı rezerve et →</a>
+    </section>
+  </main>
+</body>
+</html>

@@ -56,6 +56,34 @@ public sealed class RoomService(BookingDbContext database, RoomLockRepository ro
         return ToInfo(room);
     }
 
+    public async Task<RoomCalendarInfo> GetCalendarAsync(int id, DateOnly weekStart, CancellationToken cancellationToken)
+    {
+        if (weekStart.DayOfWeek != DayOfWeek.Monday || weekStart.DayNumber < 7 ||
+            weekStart.DayNumber > DateOnly.MaxValue.DayNumber - 7)
+        {
+            throw new ServiceException(400, "INVALID_WEEK_START", "Haftanın başlangıcı Pazartesi olmalıdır.");
+        }
+
+        if (!await database.Rooms.AsNoTracking().AnyAsync(room => room.Id == id, cancellationToken))
+        {
+            throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
+        }
+
+        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        var startUtc = TimeZoneInfo.ConvertTimeToUtc(weekStart.ToDateTime(TimeOnly.MinValue), turkeyTimeZone);
+        var endUtc = TimeZoneInfo.ConvertTimeToUtc(weekStart.AddDays(7).ToDateTime(TimeOnly.MinValue), turkeyTimeZone);
+        var reservations = await database.Reservations.AsNoTracking()
+            .Where(reservation => reservation.RoomId == id && reservation.Status == ReservationStatus.Active &&
+                reservation.StartUtc < endUtc && startUtc < reservation.EndUtc)
+            .OrderBy(reservation => reservation.StartUtc)
+            .Select(reservation => new { reservation.StartUtc, reservation.EndUtc })
+            .ToListAsync(cancellationToken);
+
+        return new RoomCalendarInfo(id, weekStart, reservations.Select(reservation => new BusySlotInfo(
+            new DateTimeOffset(DateTime.SpecifyKind(reservation.StartUtc, DateTimeKind.Utc)),
+            new DateTimeOffset(DateTime.SpecifyKind(reservation.EndUtc, DateTimeKind.Utc)))).ToList());
+    }
+
     public async Task<RoomInfo> CreateAsync(int actorId, int officeId, RoomInput input, CancellationToken cancellationToken)
     {
         await EnsureCanManageAsync(actorId, officeId, cancellationToken);

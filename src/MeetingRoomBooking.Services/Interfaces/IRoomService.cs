@@ -9,6 +9,7 @@ public interface IRoomService
     Task<PagedResult<RoomInfo>> SearchAvailableAsync(DateTimeOffset startsAt, DateTimeOffset endsAt,
         int page, int pageSize, int? officeId, int? minCapacity, int? equipmentId, CancellationToken cancellationToken);
     Task<RoomInfo> GetAsync(int id, CancellationToken cancellationToken);
+    Task<RoomCalendarInfo> GetCalendarAsync(int id, DateOnly weekStart, CancellationToken cancellationToken);
     Task<RoomInfo> CreateAsync(int actorId, int officeId, RoomInput input, CancellationToken cancellationToken);
     Task<RoomInfo> UpdateAsync(int actorId, int id, RoomInput input, CancellationToken cancellationToken);
     Task DeleteAsync(int actorId, int id, CancellationToken cancellationToken);

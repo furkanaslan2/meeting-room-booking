@@ -48,6 +48,15 @@ public sealed class RoomsController(IRoomService roomService) : ControllerBase
     public async Task<RoomInfo> Get(int id, CancellationToken cancellationToken) =>
         await roomService.GetAsync(id, cancellationToken);
 
+    [HttpGet("{id:int}/calendar")]
+    [ProducesResponseType(typeof(RoomCalendarInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<RoomCalendarInfo> Calendar(int id, [FromQuery, Required] DateOnly? weekStart,
+        CancellationToken cancellationToken) =>
+        await roomService.GetCalendarAsync(id, weekStart!.Value, cancellationToken);
+
     [HttpPost]
     [Authorize(Roles = "Admin,OfficeManager")]
     [ProducesResponseType(typeof(RoomInfo), StatusCodes.Status201Created)]
