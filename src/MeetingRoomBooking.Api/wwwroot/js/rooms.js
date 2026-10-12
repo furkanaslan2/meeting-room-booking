@@ -83,6 +83,13 @@ function createRoomCard(room) {
   }
 
   card.append(top, heading, details, equipment);
+  const links = document.createElement("div");
+  links.className = "room-card-links";
+  const calendarLink = document.createElement("a");
+  calendarLink.className = "room-book-link";
+  calendarLink.href = `/calendar.html?${new URLSearchParams({ roomId: String(room.id) })}`;
+  calendarLink.textContent = "Haftalık takvim →";
+  links.append(calendarLink);
   if (room.isActive) {
     const link = document.createElement("a");
     link.className = "room-book-link";
@@ -93,8 +100,9 @@ function createRoomCard(room) {
     }
     link.href = `/reserve.html?${params}`;
     link.textContent = "Bu odayı rezerve et →";
-    card.append(link);
+    links.append(link);
   }
+  card.append(links);
   return card;
 }
 
