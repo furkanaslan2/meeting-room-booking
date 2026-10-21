@@ -34,12 +34,14 @@ function selectTab(tab) {
 function showGuest() {
   guestView.hidden = false;
   accountView.hidden = true;
+  document.querySelector("#reports-link").hidden = true;
 }
 
 function showAccount(user) {
   document.querySelector("#welcome-name").textContent = `Merhaba, ${user.fullName}`;
   document.querySelector("#profile-role").textContent = roleNames[user.role] || user.role;
   document.querySelector("#profile-email").textContent = user.email;
+  document.querySelector("#reports-link").hidden = user.role !== "Admin" && user.role !== "OfficeManager";
   guestView.hidden = true;
   accountView.hidden = false;
 }

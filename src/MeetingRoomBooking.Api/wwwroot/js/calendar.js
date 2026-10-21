@@ -1,4 +1,5 @@
 import { apiRequest, clearToken, getToken } from "./api.js";
+import { applyRoleMenu } from "./role-menu.js";
 
 const roomId = Number(new URLSearchParams(location.search).get("roomId"));
 const board = document.querySelector("#calendar-board");
@@ -182,6 +183,7 @@ async function initialize() {
     const user = await apiRequest("/api/auth/me");
     const roleNames = { Admin: "Yönetici", OfficeManager: "Ofis yöneticisi", Employee: "Çalışan" };
     document.querySelector("#user-role").textContent = roleNames[user.role] || user.role;
+    applyRoleMenu(user);
     const room = await apiRequest(`/api/rooms/${roomId}`);
     document.querySelector("#page-title").textContent = `${room.name} takvimi`;
     document.querySelector("#room-details").textContent = `${room.capacity} kişi · ${room.floor}. kat`;
