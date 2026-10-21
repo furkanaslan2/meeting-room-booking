@@ -1,4 +1,5 @@
 import { apiRequest, clearToken, getToken } from "./api.js";
+import { applyRoleMenu } from "./role-menu.js";
 
 const form = document.querySelector("#room-filters");
 const officeFilter = document.querySelector("#office-filter");
@@ -199,6 +200,7 @@ async function initialize() {
     const user = await apiRequest("/api/auth/me");
     const roleNames = { Admin: "Yönetici", OfficeManager: "Ofis yöneticisi", Employee: "Çalışan" };
     document.querySelector("#user-role").textContent = roleNames[user.role] || user.role;
+    applyRoleMenu(user);
     inactiveOption.dataset.roleHidden = String(user.role === "Employee");
     updateTimeFields();
 

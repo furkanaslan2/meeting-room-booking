@@ -1,4 +1,5 @@
 import { apiRequest, clearToken, getToken } from "./api.js";
+import { applyRoleMenu } from "./role-menu.js";
 
 const notice = document.querySelector("#mine-notice");
 const list = document.querySelector("#reservation-list");
@@ -152,6 +153,7 @@ async function initialize() {
     const user = await apiRequest("/api/auth/me");
     const roleNames = { Admin: "Yönetici", OfficeManager: "Ofis yöneticisi", Employee: "Çalışan" };
     document.querySelector("#user-role").textContent = roleNames[user.role] || user.role;
+    applyRoleMenu(user);
     await loadReservations();
   } catch (error) {
     if (error.status === 401) { location.replace("/"); return; }

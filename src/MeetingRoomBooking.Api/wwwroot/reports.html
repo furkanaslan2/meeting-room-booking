@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Oda kullanım raporları | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/reports.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a href="/rooms.html">Odalar</a>
+        <a href="/mine.html">Rezervasyonlarım</a>
+        <span class="nav-current" aria-current="page" data-report-link>Raporlar</span>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">SON 30 GÜN</span>
+      <h1 id="page-title">Oda kullanım raporları</h1>
+      <p>Odaların doluluk oranlarını ve en çok kullanılan odaları görün. Liste, dolu kalınan süreye göre sıralanır.</p>
+    </section>
+
+    <p id="report-notice" class="notice" role="alert" hidden></p>
+    <section id="report-panel" class="filter-panel" aria-labelledby="report-title" hidden>
+      <div class="section-heading"><h2 id="report-title">Oda bazında kullanım</h2><p id="report-count" role="status" aria-live="polite"></p></div>
+      <div class="report-toolbar">
+        <div id="office-field" class="field" hidden><label for="office-filter">Ofis</label><select id="office-filter"><option value="">Tüm ofisler</option></select></div>
+        <p id="report-period"></p>
+        <button id="refresh-report" class="secondary-button" type="button">Yenile</button>
+      </div>
+      <p class="calendar-hint">Dar ekranda tabloyu sağa kaydırabilirsiniz. Doluluk oranı, geçen mesai süresine göre hesaplanır.</p>
+      <div id="report-table-wrap" class="report-table-wrap" tabindex="0" aria-label="Oda kullanım tablosu, yatay kaydırılabilir">
+        <table class="report-table">
+          <thead><tr><th scope="col">Oda</th><th scope="col">Ofis</th><th scope="col">Rezervasyon</th><th scope="col">Dolu süre</th><th scope="col">Doluluk</th></tr></thead>
+          <tbody id="report-rows"></tbody>
+        </table>
+      </div>
+      <p id="report-empty" class="empty-message" hidden>Bu kapsamda oda bulunamadı.</p>
+      <div id="pagination" class="pagination" hidden>
+        <button id="previous-page" type="button">← Önceki</button>
+        <span id="page-label"></span>
+        <button id="next-page" type="button">Sonraki →</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

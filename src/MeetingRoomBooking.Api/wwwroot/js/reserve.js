@@ -1,4 +1,5 @@
 import { apiRequest, clearToken, getToken } from "./api.js";
+import { applyRoleMenu } from "./role-menu.js";
 
 const params = new URLSearchParams(location.search);
 const roomId = Number(params.get("roomId"));
@@ -178,6 +179,7 @@ async function initialize() {
     const user = await apiRequest("/api/auth/me");
     const roleNames = { Admin: "Yönetici", OfficeManager: "Ofis yöneticisi", Employee: "Çalışan" };
     document.querySelector("#user-role").textContent = roleNames[user.role] || user.role;
+    applyRoleMenu(user);
     room = await apiRequest(`/api/rooms/${roomId}`);
     if (!room.isActive) { showNotice("Bu oda pasif olduğu için rezerve edilemez."); return; }
     document.querySelector("#selected-room").textContent =
