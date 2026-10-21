@@ -1,23 +1,39 @@
 # Meeting Room Booking
 
-Staj projesi: toplantı odası rezervasyon sistemi. Veritabanı şeması, örnek veriler, JWT kimlik doğrulama, ofis/oda ve rezervasyon API'leri, boş oda araması, oda kullanım raporu, giriş/kayıt ve oda listesi arayüzleri hazırdır. Diğer arayüz ekranları sonraki aşamalardadır.
+Staj projesi: çalışanların toplantı odası bulup rezervasyon yapabildiği, yöneticilerin ofis ve odaları yönetip kullanım raporlarını görebildiği bir web uygulaması. Backend .NET 8 ASP.NET Core Web API, Entity Framework Core ve MySQL 8+ kullanır. Frontend yalnızca HTML, CSS ve saf JavaScript ile yazılmıştır. Rezervasyon oluşturma ve düzenleme sırasında MySQL satır kilidi aynı odada eşzamanlı çakışmayı engeller.
+
+## Ekran görüntüleri
+
+Ekranlar örnek verilerle gösterilmiştir; rezervasyon ve rapor tarihleri uygulamanın çalıştırıldığı güne göre değişir.
+
+| Giriş | Oda arama ve listeleme |
+| --- | --- |
+| ![Boş giriş formu](docs/screenshots/01-giris.png) | ![Oda filtreleri ve oda kartları](docs/screenshots/02-odalar.png) |
+
+| Rezervasyon oluşturma | Rezervasyonlarım |
+| --- | --- |
+| ![Oda, tarih ve katılımcı alanları](docs/screenshots/03-rezervasyon.png) | ![Çalışanın rezervasyon listesi](docs/screenshots/04-rezervasyonlarim.png) |
+
+| Haftalık oda takvimi | Admin oda kullanım raporu |
+| --- | --- |
+| ![Odanın haftalık doluluk takvimi](docs/screenshots/05-takvim.png) | ![Son 30 gün oda kullanım raporu](docs/screenshots/06-rapor.png) |
 
 ## Gerekenler
 
 - .NET 8 SDK veya üzeri
 - Git
-- MySQL 8 veya üzeri (veritabanı aşamasında kullanılacak)
+- MySQL Server 8 veya üzeri; MySQL Workbench, veritabanını oluşturmak ve incelemek için kullanılabilir
 
 ## Veritabanı modelini kurma (Windows PowerShell)
 
 1. `dotnet --version` komutuyla SDK'nın kurulu olduğunu kontrol et.
-2. MySQL 8 sunucusunun çalıştığından emin ol.
-3. `Copy-Item src/MeetingRoomBooking.Api/appsettings.Example.json src/MeetingRoomBooking.Api/appsettings.json` çalıştır. Oluşan `appsettings.json` içindeki `YOUR_DB_USER` ve `YOUR_DB_PASSWORD` alanlarını kendi yerel MySQL bilgilerinle değiştir. `Seed:DemoPassword` alanına en az 12 karakterlik ayrı bir test şifresi; `Jwt:Key` alanına en az 32 baytlık rastgele, gizli bir değer yaz. Bu dosyayı Git'e ekleme.
+2. MySQL 8 sunucusunun çalıştığından emin ol. MySQL Workbench'te yerel bağlantını aç, yeni bir SQL sekmesinde `CREATE DATABASE IF NOT EXISTS meeting_room_booking CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;` komutunu çalıştır. Kullandığın hesabın bu veritabanında tablo oluşturma yetkisi olmalı.
+3. Repo kökünde `Copy-Item src/MeetingRoomBooking.Api/appsettings.Example.json src/MeetingRoomBooking.Api/appsettings.json` çalıştır. Oluşan `appsettings.json` içindeki `YOUR_DB_USER` ve `YOUR_DB_PASSWORD` alanlarını kendi MySQL bağlantı bilgilerinle değiştir. Workbench'e girişte kullandığın hesap aynı MySQL sunucusundaysa bu bilgileri kullanabilirsin. `Seed:DemoPassword` alanına en az 12 karakterlik ayrı bir test şifresi; `Jwt:Key` alanına en az 32 baytlık rastgele, gizli bir değer yaz. Gerçek şifrelerini veya bu dosyayı Git'e ekleme.
 4. Repo kökünde `dotnet restore MeetingRoomBooking.sln` ve `dotnet build MeetingRoomBooking.sln` çalıştır.
 5. `dotnet tool restore` çalıştır.
 6. `dotnet ef database update --project src/MeetingRoomBooking.Data --startup-project src/MeetingRoomBooking.Api` çalıştır. Repodaki hazır migration veritabanına uygulanır; yeniden `migrations add InitialCreate` çalıştırma.
-7. `dotnet run --project src/MeetingRoomBooking.Api --no-launch-profile -- --urls http://localhost:5080` çalıştır.
-8. Tarayıcıda `http://localhost:5080/swagger` ve `http://localhost:5080/api/status` adreslerini aç.
+7. `dotnet run --project src/MeetingRoomBooking.Api --no-launch-profile -- --urls http://localhost:5080` çalıştır. İlk açılışta boş veritabanına örnek veriler eklenir.
+8. Tarayıcıda arayüz için `http://localhost:5080/`, API uçlarını denemek için `http://localhost:5080/swagger` ve sağlık kontrolü için `http://localhost:5080/api/status` adreslerini aç. Bilgisayarında x64 SDK ile uyumlu ASP.NET Core 8 çalışma zamanı da kurulu olmalı; uygulama başlarken bir framework eksikliği bildirirse `dotnet --list-runtimes` ile kontrol et.
 
 `src/MeetingRoomBooking.Api/appsettings.Example.json` yalnızca ayarların biçimini gösterir. Gerçek bağlantı ve JWT sırları Git'e yüklenmez. `InitialCreate` migration dosyaları repoda bulunur; içlerinde şifre olmamalıdır. Model değişikliği yapıldığında yeni isimli migration oluşturulur.
 
@@ -103,7 +119,7 @@ Arama yalnızca aktif odaları döndürür. Aktif rezervasyonlardan aralıkla ke
 | `PUT /api/reservations/{id}` | Oda, saat, başlık ve katılımcıları değiştirir | Admin; kendi ofisinde Ofis Yöneticisi; kendi kaydında Çalışan |
 | `DELETE /api/reservations/{id}` | Rezervasyonu iptal eder; 204 döner | Aynı düzenleme yetkileri |
 
-`PUT` gövdesi `POST` ile aynıdır. Oda değişirse Ofis Yöneticisi yalnızca kendi ofisindeki bir odayı hedefleyebilir. İptal edilmiş kayıt düzenlenemez (409 `RESERVATION_CANCELLED`); ikinci kez iptal etmek de 204 döner. Çakışma 409 `ROOM_CONFLICT` döner. Eşzamanlı oluşturma ve düzenleme yerel MySQL üzerinde denenmiştir (sırasıyla 201/409 ve 200/409); iptalin eşzamanlı etkileşimi ayrıca sınanmamıştır. Diğer arayüz ekranları sonraki aşamalardadır.
+`PUT` gövdesi `POST` ile aynıdır. Oda değişirse Ofis Yöneticisi yalnızca kendi ofisindeki bir odayı hedefleyebilir. İptal edilmiş kayıt düzenlenemez (409 `RESERVATION_CANCELLED`); ikinci kez iptal etmek de 204 döner. Çakışma 409 `ROOM_CONFLICT` döner. Eşzamanlı oluşturma ve düzenleme yerel MySQL üzerinde denenmiştir (sırasıyla 201/409 ve 200/409); iptalin eşzamanlı etkileşimi ayrıca sınanmamıştır.
 
 ## Oda kullanım raporu
 
@@ -127,4 +143,11 @@ Aktif oda kartındaki **Bu odayı rezerve et** bağlantısı `/reserve.html` for
 
 Oda kartındaki **Haftalık takvim** bağlantısı `/calendar.html?roomId=...` sayfasını açar. Bu hafta, önceki/sonraki hafta ve yenileme düğmeleri bulunur. Görünüm Türkiye saatine göre Pazartesi–Pazar, her gün 08:00–20:00 saatlerini CSS Grid ile gösterir; telefonda yatay kaydırılır. Altındaki liste dolu saatleri metin olarak da verir. İptal edilen rezervasyonlar dolu görünmez. Yeni veya iptal edilmiş rezervasyonların durumunu görmek için **Yenile** kullanılır.
 
-`GET /api/rooms/{id}/calendar?weekStart=2026-10-05` giriş gerektirir; `weekStart` bir Pazartesi olmalıdır. Yanıtta oda numarası, hafta başlangıcı ve aktif rezervasyonların yalnızca `startsAtUtc` / `endsAtUtc` alanları vardır. Diğer çalışanların toplantı başlığı ve katılımcıları açıklanmaz. Sorgu Türkiye haftasının başlangıç/bitişini UTC'ye çevirir ve kesişen rezervasyonları alır. Takvim anlık bilgi verir; rezervasyon kaydındaki MySQL satır kilidi ve çakışma kontrolü devam eder. Yönetim işlemlerinin arayüzü sonraki aşamadadır.
+`GET /api/rooms/{id}/calendar?weekStart=2026-10-05` giriş gerektirir; `weekStart` bir Pazartesi olmalıdır. Yanıtta oda numarası, hafta başlangıcı ve aktif rezervasyonların yalnızca `startsAtUtc` / `endsAtUtc` alanları vardır. Diğer çalışanların toplantı başlığı ve katılımcıları açıklanmaz. Sorgu Türkiye haftasının başlangıç/bitişini UTC'ye çevirir ve kesişen rezervasyonları alır. Takvim anlık bilgi verir; rezervasyon kaydındaki MySQL satır kilidi ve çakışma kontrolü devam eder.
+
+## Bilinen sınırlar ve teslim
+
+- Ofis, oda, ekipman ve kullanıcı rolü yönetimi API üzerinden ve Swagger'da yapılır; bunlar için ayrı bir yönetim sayfası yoktur. PDF'de zorunlu tutulan kullanıcı arayüzü ekranları giriş/kayıt, oda listesi, rezervasyon formu, Rezervasyonlarım, haftalık takvim ve role göre menüdür.
+- PDF'nin ek puanlık tekrarlayan rezervasyon, işlem geçmişi ve hatırlatma servisi uygulanmadı. İptal işleminin diğer yazma işlemleriyle eşzamanlı etkileşimi ayrı bir otomatik testle doğrulanmadı.
+- Rapor, iptal edilen geçmiş rezervasyonların gerçekleşip gerçekleşmediğini belirleyemez; iptal edilenleri saymaz. Veritabanına uygulamayı atlayarak doğrudan yazan başka bir istemci, uygulamadaki oda kilidi kuralını kullanmaz.
+- Demo videosu repo dosyası olarak eklenmez. Teslim e-postasında GitHub repo bağlantısıyla birlikte erişilebilir demo video bağlantısı paylaşılır. Videoda üç rol, oda araması, rezervasyon ve çakışma hatası, Rezervasyonlarım, haftalık takvim ve yönetici raporu gösterilebilir. Gerçek MySQL/JWT/test kullanıcı şifreleri videoda gösterilmemelidir.
