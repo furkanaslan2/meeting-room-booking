@@ -10,4 +10,5 @@ public class User
     public int? OfficeId { get; set; }
     public Office? Office { get; set; }
     public ICollection<Reservation> OrganizedReservations { get; set; } = new List<Reservation>();
+    public ICollection<ReservationAuditEntry> ReservationAuditEntries { get; set; } = new List<ReservationAuditEntry>();
 }

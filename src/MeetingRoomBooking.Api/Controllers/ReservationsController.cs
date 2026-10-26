@@ -33,6 +33,17 @@ public sealed class ReservationsController(IReservationService reservationServic
     public async Task<IActionResult> Get(int id, CancellationToken cancellationToken)
         => Ok(await reservationService.GetAsync(GetActorId(), id, cancellationToken));
 
+    [HttpGet("{id:int}/history")]
+    [ProducesResponseType(typeof(PagedResult<ReservationAuditInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<PagedResult<ReservationAuditInfo>> History(int id,
+        [FromQuery, Range(1, 1000000)] int page = 1,
+        [FromQuery, Range(1, 100)] int pageSize = 10,
+        CancellationToken cancellationToken = default) =>
+        await reservationService.HistoryAsync(GetActorId(), id, page, pageSize, cancellationToken);
+
     [HttpPost]
     [ProducesResponseType(typeof(ReservationInfo), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

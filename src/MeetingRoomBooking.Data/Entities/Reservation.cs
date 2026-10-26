@@ -14,4 +14,5 @@ public class Reservation
     public DateTime CreatedUtc { get; set; }
     public DateTime UpdatedUtc { get; set; }
     public ICollection<ReservationParticipant> Participants { get; set; } = new List<ReservationParticipant>();
+    public ICollection<ReservationAuditEntry> AuditEntries { get; set; } = new List<ReservationAuditEntry>();
 }
