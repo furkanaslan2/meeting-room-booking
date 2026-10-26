@@ -48,6 +48,8 @@ erDiagram
     Rooms ||--o{ RoomEquipment : has
     Equipment ||--o{ RoomEquipment : assigned
     Reservations ||--o{ ReservationParticipants : includes
+    Reservations ||--o{ ReservationAuditEntries : records
+    Users ||--o{ ReservationAuditEntries : acts
 ```
 
 `RevokedTokens` tablosu JWT çıkış işlemleri için ayrılmıştır. Rezervasyon oluşturma işleminde `READ COMMITTED` MySQL transaction başlatılır ve ilgili `Rooms` satırı `SELECT ... FOR UPDATE` ile kilitlenir. Aktif rezervasyonların çakışması (`StartUtc < yeniBitiş` ve `EndUtc > yeniBaşlangıç`) kilit tutulurken sorgulanır; yeni rezervasyon ve katılımcıları aynı transaction içinde kaydedilip ardından commit edilir. Aynı odaya gelen ikinci istek kilit açılana kadar bekler, sonra güncel rezervasyonları görür ve çakışıyorsa 409 `ROOM_CONFLICT` döner. Düzenleme işleminde eski ve yeni odanın satırları ID sırasıyla kilitlenir; önce mevcut rezervasyonun yeri tekrar okunur, sonra hedef odanın çakışma/kapasite kuralları kontrol edilir. İptal de oda kilidini kullanır ve satırı silmek yerine `Cancelled` durumuna geçirir. Oda kapasitesini veya aktifliğini değiştiren ve oda silen işlemler de aynı satır kilidini kullanır. `READ COMMITTED`, kilit beklemesi bittikten sonraki okumanın yeni bir görünüm almasını sağlar. Bu garanti, uygulamanın bütün rezervasyon yazma yolları aynı kilit düzenini kullandığında geçerlidir; veritabanına uygulamayı atlayarak yapılan doğrudan yazmalar bu kurala tabi değildir.
@@ -115,6 +117,7 @@ Arama yalnızca aktif odaları döndürür. Aktif rezervasyonlardan aralıkla ke
 | `GET /api/reservations?page=1&pageSize=10` | Rezervasyonları sayfalı listeler | Admin: tümü; Ofis Yöneticisi: kendi ofisi; Çalışan: kendi kayıtları |
 | `GET /api/reservations/mine?page=1&pageSize=10` | Kendi rezervasyonlarını listeler | Giriş gerekli |
 | `GET /api/reservations/{id}` | Tek rezervasyonu gösterir | Aynı rol kapsamı |
+| `GET /api/reservations/{id}/history?page=1&pageSize=10` | İşlem geçmişini sayfalı gösterir | Aynı rol kapsamı |
 | `POST /api/reservations` | Rezervasyon oluşturur | Giriş gerekli |
 | `POST /api/reservations/recurring` | Seçilen hafta sayısı boyunca aynı gün ve saatte tekrarlayan rezervasyon oluşturur | Giriş gerekli |
 | `PUT /api/reservations/{id}` | Oda, saat, başlık ve katılımcıları değiştirir | Admin; kendi ofisinde Ofis Yöneticisi; kendi kaydında Çalışan |
@@ -127,6 +130,12 @@ Arama yalnızca aktif odaları döndürür. Aktif rezervasyonlardan aralıkla ke
 `POST /api/reservations/recurring` gövdesi normal `POST /api/reservations` alanlarına ek olarak `weekCount` içerir. Başlangıç tarihinden itibaren haftanın aynı günü ve saatinde **2-52 hafta** için birer rezervasyon oluşturur. `weekCount` verilmezse örnekteki gibi 6 hafta kullanılır. İlk tarih gelecekte olmalı; her hafta için süre, Türkiye mesai saati, oda aktifliği, kapasite ve çakışma kuralları uygulanır. Başarı yanıtı 201 ve oluşturulan rezervasyonların listesidir. Listeleme, düzenleme ve iptal işlemleri sonrasında her rezervasyon için ayrı ayrı yapılır; serinin toplu düzenleme/iptal işlemi yoktur.
 
 Örnek: `{ "roomId": 3, "startsAt": "2026-11-03T10:00:00+03:00", "endsAt": "2026-11-03T11:00:00+03:00", "title": "Haftalık ekip toplantısı", "participants": [], "weekCount": 6 }` (ilk günü deneme tarihine göre ileri al). Aynı oda için MySQL `READ COMMITTED` transaction içinde `SELECT ... FOR UPDATE` ile `Rooms` satırı kilitlenir; seçilen bütün aralıklar kilit tutulurken kontrol edilir. Bir hafta çakışırsa 409 `ROOM_CONFLICT` mesajı **kaçıncı tekrarın hangi Türkiye tarihi ve saatinde** çakıştığını söyler; transaction geri alınır ve hiçbir hafta kaydedilmez. Kayıtların tamamı tek `SaveChanges` ve commit ile eklenir. Eşzamanlı iki seri isteği de aynı oda kilidinde sıraya girer.
+
+### Rezervasyon işlem geçmişi (bonus)
+
+Yeni rezervasyon oluşturma, düzenleme ve ilk iptal işlemi `ReservationAuditEntries` tablosuna olay ekler. Her olayda işlemi yapan kullanıcı ID'si, işlem türü (`Created`, `Updated`, `Cancelled`), UTC zamanı ve oda/başlık/saat/durum/katılımcı sayısının önceki ve sonraki hâli saklanır. Katılımcı adları ve e-postaları geçmişe kopyalanmaz. Tekrarlayan rezervasyonun her haftası için ayrı `Created` olayı kaydedilir. Olay ve rezervasyon değişikliği aynı veritabanı transaction'ında kaydedildiği için biri başarısız olursa diğeri de kalmaz. Tekrar iptal edilen kayıt yeni bir olay oluşturmaz.
+
+`GET /api/reservations/{id}/history` en yeni olaydan başlayarak sayfalı döner. Admin her kaydı, Ofis Yöneticisi kendi ofisindeki kaydı, Çalışan yalnızca kendi rezervasyonunu görebilir; diğer istekler 403 alır. Bu özellik eklendikten **önce** yapılmış işlemler için geriye dönük olay üretilemez; eski rezervasyonların geçmişi boş olabilir.
 
 ## Oda kullanım raporu
 
@@ -155,6 +164,6 @@ Oda kartındaki **Haftalık takvim** bağlantısı `/calendar.html?roomId=...` s
 ## Bilinen sınırlar ve teslim
 
 - Ofis, oda, ekipman ve kullanıcı rolü yönetimi API üzerinden ve Swagger'da yapılır; bunlar için ayrı bir yönetim sayfası yoktur. PDF'de zorunlu tutulan kullanıcı arayüzü ekranları giriş/kayıt, oda listesi, rezervasyon formu, Rezervasyonlarım, haftalık takvim ve role göre menüdür.
-- PDF'nin ek puanlık işlem geçmişi ve hatırlatma servisi henüz uygulanmadı. İptal işleminin diğer yazma işlemleriyle eşzamanlı etkileşimi ayrı bir otomatik testle doğrulanmadı.
+- PDF'nin ek puanlık hatırlatma servisi henüz uygulanmadı. İptal işleminin diğer yazma işlemleriyle eşzamanlı etkileşimi ayrı bir otomatik testle doğrulanmadı.
 - Rapor, iptal edilen geçmiş rezervasyonların gerçekleşip gerçekleşmediğini belirleyemez; iptal edilenleri saymaz. Veritabanına uygulamayı atlayarak doğrudan yazan başka bir istemci, uygulamadaki oda kilidi kuralını kullanmaz.
 - Demo videosu repo dosyası olarak eklenmez. Teslim e-postasında GitHub repo bağlantısıyla birlikte erişilebilir demo video bağlantısı paylaşılır. Videoda üç rol, oda araması, rezervasyon ve çakışma hatası, Rezervasyonlarım, haftalık takvim ve yönetici raporu gösterilebilir. Gerçek MySQL/JWT/test kullanıcı şifreleri videoda gösterilmemelidir.
