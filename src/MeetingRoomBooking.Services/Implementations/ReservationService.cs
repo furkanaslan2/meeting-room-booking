@@ -10,39 +10,77 @@ namespace MeetingRoomBooking.Services.Implementations;
 
 public sealed class ReservationService(BookingDbContext database, RoomLockRepository roomLocks) : IReservationService
 {
+    private static readonly TimeZoneInfo TurkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+
     public async Task<ReservationInfo> CreateAsync(int organizerId, ReservationInput input, CancellationToken cancellationToken)
     {
         Validate(input);
-        var startUtc = input.StartsAt.UtcDateTime;
-        var endUtc = input.EndsAt.UtcDateTime;
 
         await using var transaction = await database.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
         var room = await roomLocks.LockAsync(input.RoomId, cancellationToken)
             ?? throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
         await EnsureAvailableAsync(room, input, null, cancellationToken);
 
-        var now = DateTime.UtcNow;
-        var reservation = new Reservation
-        {
-            RoomId = room.Id,
-            OrganizerUserId = organizerId,
-            Title = input.Title.Trim(),
-            StartUtc = startUtc,
-            EndUtc = endUtc,
-            Status = ReservationStatus.Active,
-            CreatedUtc = now,
-            UpdatedUtc = now,
-            Participants = input.Participants.Select(x => new ReservationParticipant
-            {
-                Name = x.Name.Trim(),
-                Email = x.Email?.Trim()
-            }).ToList()
-        };
+        var reservation = NewReservation(organizerId, input, DateTime.UtcNow);
         database.Reservations.Add(reservation);
         await database.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return ToInfo(reservation);
+    }
+
+    public async Task<IReadOnlyList<ReservationInfo>> CreateRecurringAsync(int organizerId, ReservationInput input,
+        int weekCount, CancellationToken cancellationToken)
+    {
+        Validate(input);
+        if (weekCount is < 2 or > 52)
+        {
+            throw new ServiceException(400, "INVALID_RECURRENCE_COUNT", "Tekrar sayısı 2 ile 52 hafta arasında olmalıdır.");
+        }
+
+        var occurrences = new List<ReservationInput>(weekCount);
+        for (var index = 0; index < weekCount; index++)
+        {
+            DateTimeOffset startsAt;
+            DateTimeOffset endsAt;
+            try
+            {
+                startsAt = input.StartsAt.AddDays(index * 7);
+                endsAt = input.EndsAt.AddDays(index * 7);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                throw new ServiceException(400, "INVALID_RECURRENCE", "Tekrar tarihleri geçerli aralık dışında.");
+            }
+
+            var occurrence = input with { StartsAt = startsAt, EndsAt = endsAt };
+            ReservationTimeRules.Validate(occurrence.StartsAt, occurrence.EndsAt);
+            occurrences.Add(occurrence);
+        }
+
+        await using var transaction = await database.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
+        var room = await roomLocks.LockAsync(input.RoomId, cancellationToken)
+            ?? throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
+        for (var index = 0; index < occurrences.Count; index++)
+        {
+            try
+            {
+                await EnsureAvailableAsync(room, occurrences[index], null, cancellationToken);
+            }
+            catch (ServiceException exception) when (exception.Code == "ROOM_CONFLICT")
+            {
+                var localStart = TimeZoneInfo.ConvertTime(occurrences[index].StartsAt, TurkeyTimeZone);
+                throw new ServiceException(409, "ROOM_CONFLICT",
+                    $"{index + 1}. tekrar ({localStart:dd.MM.yyyy HH:mm}, Türkiye saati) bu odada dolu. Hiçbir tekrar kaydedilmedi.");
+            }
+        }
+
+        var now = DateTime.UtcNow;
+        var reservations = occurrences.Select(occurrence => NewReservation(organizerId, occurrence, now)).ToList();
+        database.Reservations.AddRange(reservations);
+        await database.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return reservations.Select(ToInfo).ToList();
     }
 
     public async Task<PagedResult<ReservationInfo>> ListAsync(int actorId, int page, int pageSize, CancellationToken cancellationToken)
@@ -227,6 +265,23 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         new DateTimeOffset(DateTime.SpecifyKind(reservation.EndUtc, DateTimeKind.Utc)),
         reservation.Status.ToString(), reservation.Participants.OrderBy(x => x.Id)
             .Select(x => new ParticipantInfo(x.Id, x.Name, x.Email)).ToList());
+
+    private static Reservation NewReservation(int organizerId, ReservationInput input, DateTime now) => new()
+    {
+        RoomId = input.RoomId,
+        OrganizerUserId = organizerId,
+        Title = input.Title.Trim(),
+        StartUtc = input.StartsAt.UtcDateTime,
+        EndUtc = input.EndsAt.UtcDateTime,
+        Status = ReservationStatus.Active,
+        CreatedUtc = now,
+        UpdatedUtc = now,
+        Participants = input.Participants.Select(participant => new ReservationParticipant
+        {
+            Name = participant.Name.Trim(),
+            Email = participant.Email?.Trim()
+        }).ToList()
+    };
 
     private static void Validate(ReservationInput input)
     {
