@@ -137,6 +137,12 @@ Yeni rezervasyon oluşturma, düzenleme ve ilk iptal işlemi `ReservationAuditEn
 
 `GET /api/reservations/{id}/history` en yeni olaydan başlayarak sayfalı döner. Admin her kaydı, Ofis Yöneticisi kendi ofisindeki kaydı, Çalışan yalnızca kendi rezervasyonunu görebilir; diğer istekler 403 alır. Bu özellik eklendikten **önce** yapılmış işlemler için geriye dönük olay üretilemez; eski rezervasyonların geçmişi boş olabilir.
 
+### Toplantı hatırlatması (bonus)
+
+`.NET BackgroundService` uygulama açıkken başlangıcına 15 dakika veya daha az kalan aktif rezervasyonları 30 saniyede bir tarar ve API'nin çalıştığı terminale `REZERVASYON HATIRLATMASI` bilgi kaydı yazar. Logda rezervasyon ve oda numarası ile UTC başlangıç saati bulunur; katılımcı bilgisi yazılmaz. Rezervasyonun `ReminderSentUtc` alanı, tek bir SQL `UPDATE` işlemiyle yalnızca alan boşken ve başlangıç hâlâ gelecek 15 dakika içindeyken doldurulur. Böylece uygulama yeniden başlasa veya iki API örneği aynı veritabanına bağlansa aynı başlangıç için yeniden log yazılmaz. Oda veya saat değiştirildiğinde bu alan boşaltılır; yeni saat yaklaştığında tekrar hatırlatma üretilebilir. İptal edilmiş veya başlamış rezervasyonlar hatırlatılmaz. Bu bonus için `AddReservationReminder` veritabanı migration'ını uygulamadan API'yi başlatma.
+
+Konsol logu gerçek bir e-posta veya kalıcı bildirim değildir. Veritabanındaki işaretlemeden hemen sonra uygulama kapanırsa log satırı kaybolabilir; bu sürüm kalıcı bir mesaj kuyruğu veya kesin teslimat garantisi sağlamaz.
+
 ## Oda kullanım raporu
 
 `GET /api/reports/rooms?page=1&pageSize=10` son 30 Türkiye takvim günü için oda bazında `reservationCount`, `occupiedMinutes` ve `occupancyPercent` değerlerini döndürür. Yanıtta ayrıca `periodStartUtc`, `periodEndUtc`, `availableWorkMinutes`, `items`, `page`, `pageSize` ve `totalCount` bulunur. Odalar dolu dakika sayısına göre çoktan aza sıralanır; bu sıra en çok kullanılan odaları gösterir. `officeId` parametresi isteğe bağlıdır. Admin tüm ofisleri veya seçilen ofisi görür; Ofis Yöneticisi yalnızca kendi ofisini görebilir. Çalışan 403 alır.
@@ -164,6 +170,6 @@ Oda kartındaki **Haftalık takvim** bağlantısı `/calendar.html?roomId=...` s
 ## Bilinen sınırlar ve teslim
 
 - Ofis, oda, ekipman ve kullanıcı rolü yönetimi API üzerinden ve Swagger'da yapılır; bunlar için ayrı bir yönetim sayfası yoktur. PDF'de zorunlu tutulan kullanıcı arayüzü ekranları giriş/kayıt, oda listesi, rezervasyon formu, Rezervasyonlarım, haftalık takvim ve role göre menüdür.
-- PDF'nin ek puanlık hatırlatma servisi henüz uygulanmadı. İptal işleminin diğer yazma işlemleriyle eşzamanlı etkileşimi ayrı bir otomatik testle doğrulanmadı.
+- İptal işleminin diğer yazma işlemleriyle eşzamanlı etkileşimi ayrı bir otomatik testle doğrulanmadı.
 - Rapor, iptal edilen geçmiş rezervasyonların gerçekleşip gerçekleşmediğini belirleyemez; iptal edilenleri saymaz. Veritabanına uygulamayı atlayarak doğrudan yazan başka bir istemci, uygulamadaki oda kilidi kuralını kullanmaz.
 - Demo videosu repo dosyası olarak eklenmez. Teslim e-postasında GitHub repo bağlantısıyla birlikte erişilebilir demo video bağlantısı paylaşılır. Videoda üç rol, oda araması, rezervasyon ve çakışma hatası, Rezervasyonlarım, haftalık takvim ve yönetici raporu gösterilebilir. Gerçek MySQL/JWT/test kullanıcı şifreleri videoda gösterilmemelidir.
