@@ -186,6 +186,11 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
 
         await EnsureAvailableAsync(targetRoom!, input, id, cancellationToken);
         var before = Snapshot(reservation);
+        if (reservation.RoomId != input.RoomId || reservation.StartUtc != input.StartsAt.UtcDateTime ||
+            reservation.EndUtc != input.EndsAt.UtcDateTime)
+        {
+            reservation.ReminderSentUtc = null;
+        }
         reservation.RoomId = input.RoomId;
         reservation.Title = input.Title.Trim();
         reservation.StartUtc = input.StartsAt.UtcDateTime;

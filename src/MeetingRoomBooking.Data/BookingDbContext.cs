@@ -79,8 +79,10 @@ public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbCo
             entity.Property(x => x.EndUtc).HasColumnType("datetime(6)");
             entity.Property(x => x.CreatedUtc).HasColumnType("datetime(6)");
             entity.Property(x => x.UpdatedUtc).HasColumnType("datetime(6)");
+            entity.Property(x => x.ReminderSentUtc).HasColumnType("datetime(6)");
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.HasIndex(x => new { x.RoomId, x.Status, x.StartUtc, x.EndUtc });
+            entity.HasIndex(x => new { x.Status, x.ReminderSentUtc, x.StartUtc });
             entity.HasOne(x => x.Room).WithMany(x => x.Reservations)
                 .HasForeignKey(x => x.RoomId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(x => x.Organizer).WithMany(x => x.OrganizedReservations)

@@ -111,6 +111,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddHostedService<DemoDataHostedService>();
+builder.Services.AddHostedService<ReservationReminderHostedService>();
 builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -118,6 +119,7 @@ builder.Services.AddScoped<IOfficeService, OfficeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<RoomLockRepository>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IReservationReminderProcessor, ReservationReminderProcessor>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
 var app = builder.Build();

@@ -86,6 +86,9 @@ namespace MeetingRoomBooking.Data.Migrations
                     b.Property<int>("OrganizerUserId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ReminderSentUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("RoomId")
                         .HasColumnType("int");
 
@@ -108,6 +111,8 @@ namespace MeetingRoomBooking.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrganizerUserId");
+
+                    b.HasIndex("Status", "ReminderSentUtc", "StartUtc");
 
                     b.HasIndex("RoomId", "Status", "StartUtc", "EndUtc");
 
