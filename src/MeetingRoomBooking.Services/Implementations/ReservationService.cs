@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.Json;
 using MeetingRoomBooking.Data;
 using MeetingRoomBooking.Data.Entities;
 using MeetingRoomBooking.Data.Repositories;
@@ -22,6 +23,7 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         await EnsureAvailableAsync(room, input, null, cancellationToken);
 
         var reservation = NewReservation(organizerId, input, DateTime.UtcNow);
+        AddAudit(reservation, organizerId, ReservationAuditAction.Created, null, reservation.CreatedUtc);
         database.Reservations.Add(reservation);
         await database.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -77,6 +79,10 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
 
         var now = DateTime.UtcNow;
         var reservations = occurrences.Select(occurrence => NewReservation(organizerId, occurrence, now)).ToList();
+        foreach (var reservation in reservations)
+        {
+            AddAudit(reservation, organizerId, ReservationAuditAction.Created, null, now);
+        }
         database.Reservations.AddRange(reservations);
         await database.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -117,6 +123,31 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         return ToInfo(reservation);
     }
 
+    public async Task<PagedResult<ReservationAuditInfo>> HistoryAsync(int actorId, int id, int page,
+        int pageSize, CancellationToken cancellationToken)
+    {
+        var actor = await GetActorAsync(actorId, cancellationToken);
+        var reservation = await database.Reservations.AsNoTracking().Include(x => x.Room)
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
+            ?? throw new ServiceException(404, "RESERVATION_NOT_FOUND", "Rezervasyon bulunamadı.");
+        EnsureCanManage(actor, reservation);
+
+        var query = database.ReservationAuditEntries.AsNoTracking().Where(x => x.ReservationId == id);
+        var total = await query.CountAsync(cancellationToken);
+        var entries = await query.OrderByDescending(x => x.OccurredUtc).ThenByDescending(x => x.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(x => new { x.Id, x.ReservationId, x.ActorUserId, ActorFullName = x.Actor.FullName,
+                x.Action, x.OccurredUtc, x.BeforeJson, x.AfterJson })
+            .ToListAsync(cancellationToken);
+        var items = entries.Select(x => new ReservationAuditInfo(
+            x.Id, x.ReservationId, x.ActorUserId, x.ActorFullName, x.Action.ToString(),
+            AsUtc(x.OccurredUtc),
+            x.BeforeJson is null ? null : JsonSerializer.Deserialize<ReservationAuditSnapshot>(x.BeforeJson),
+            JsonSerializer.Deserialize<ReservationAuditSnapshot>(x.AfterJson)
+                ?? throw new InvalidOperationException("Invalid reservation audit snapshot."))).ToList();
+        return new PagedResult<ReservationAuditInfo>(items, page, pageSize, total);
+    }
+
     public async Task<ReservationInfo> UpdateAsync(int actorId, int id, ReservationInput input, CancellationToken cancellationToken)
     {
         Validate(input);
@@ -154,6 +185,7 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         }
 
         await EnsureAvailableAsync(targetRoom!, input, id, cancellationToken);
+        var before = Snapshot(reservation);
         reservation.RoomId = input.RoomId;
         reservation.Title = input.Title.Trim();
         reservation.StartUtc = input.StartsAt.UtcDateTime;
@@ -164,6 +196,7 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         {
             Name = x.Name.Trim(), Email = x.Email?.Trim()
         }).ToList();
+        AddAudit(reservation, actorId, ReservationAuditAction.Updated, before, reservation.UpdatedUtc);
         await database.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToInfo(reservation);
@@ -178,7 +211,7 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         await using var transaction = await database.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
         _ = await roomLocks.LockAsync(originalRoomId, cancellationToken)
             ?? throw new ServiceException(404, "ROOM_NOT_FOUND", "Oda bulunamadı.");
-        var reservation = await database.Reservations.Include(x => x.Room)
+        var reservation = await database.Reservations.Include(x => x.Room).Include(x => x.Participants)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new ServiceException(404, "RESERVATION_NOT_FOUND", "Rezervasyon bulunamadı.");
         if (reservation.RoomId != originalRoomId)
@@ -190,8 +223,10 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         EnsureCanManage(actor, reservation);
         if (reservation.Status == ReservationStatus.Active)
         {
+            var before = Snapshot(reservation);
             reservation.Status = ReservationStatus.Cancelled;
             reservation.UpdatedUtc = DateTime.UtcNow;
+            AddAudit(reservation, actorId, ReservationAuditAction.Cancelled, before, reservation.UpdatedUtc);
             await database.SaveChangesAsync(cancellationToken);
         }
 
@@ -265,6 +300,26 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         new DateTimeOffset(DateTime.SpecifyKind(reservation.EndUtc, DateTimeKind.Utc)),
         reservation.Status.ToString(), reservation.Participants.OrderBy(x => x.Id)
             .Select(x => new ParticipantInfo(x.Id, x.Name, x.Email)).ToList());
+
+    private static DateTimeOffset AsUtc(DateTime value) =>
+        new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
+    private static ReservationAuditSnapshot Snapshot(Reservation reservation) => new(
+        reservation.RoomId, reservation.Title, AsUtc(reservation.StartUtc), AsUtc(reservation.EndUtc),
+        reservation.Status.ToString(), reservation.Participants.Count);
+
+    private static void AddAudit(Reservation reservation, int actorId, ReservationAuditAction action,
+        ReservationAuditSnapshot? before, DateTime occurredUtc)
+    {
+        reservation.AuditEntries.Add(new ReservationAuditEntry
+        {
+            ActorUserId = actorId,
+            Action = action,
+            OccurredUtc = occurredUtc,
+            BeforeJson = before is null ? null : JsonSerializer.Serialize(before),
+            AfterJson = JsonSerializer.Serialize(Snapshot(reservation))
+        });
+    }
 
     private static Reservation NewReservation(int organizerId, ReservationInput input, DateTime now) => new()
     {
