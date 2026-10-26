@@ -117,6 +117,44 @@ namespace MeetingRoomBooking.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MeetingRoomBooking.Data.Entities.ReservationAuditEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AfterJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BeforeJson")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("OccurredUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ReservationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ReservationId", "OccurredUtc");
+
+                    b.ToTable("ReservationAuditEntries", (string)null);
+                });
+
             modelBuilder.Entity("MeetingRoomBooking.Data.Entities.ReservationParticipant", b =>
                 {
                     b.Property<int>("Id")
@@ -274,6 +312,25 @@ namespace MeetingRoomBooking.Data.Migrations
                     b.Navigation("Room");
                 });
 
+            modelBuilder.Entity("MeetingRoomBooking.Data.Entities.ReservationAuditEntry", b =>
+                {
+                    b.HasOne("MeetingRoomBooking.Data.Entities.User", "Actor")
+                        .WithMany("ReservationAuditEntries")
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MeetingRoomBooking.Data.Entities.Reservation", "Reservation")
+                        .WithMany("AuditEntries")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Actor");
+
+                    b.Navigation("Reservation");
+                });
+
             modelBuilder.Entity("MeetingRoomBooking.Data.Entities.ReservationParticipant", b =>
                 {
                     b.HasOne("MeetingRoomBooking.Data.Entities.Reservation", "Reservation")
@@ -339,6 +396,8 @@ namespace MeetingRoomBooking.Data.Migrations
 
             modelBuilder.Entity("MeetingRoomBooking.Data.Entities.Reservation", b =>
                 {
+                    b.Navigation("AuditEntries");
+
                     b.Navigation("Participants");
                 });
 
@@ -352,6 +411,8 @@ namespace MeetingRoomBooking.Data.Migrations
             modelBuilder.Entity("MeetingRoomBooking.Data.Entities.User", b =>
                 {
                     b.Navigation("OrganizedReservations");
+
+                    b.Navigation("ReservationAuditEntries");
                 });
 #pragma warning restore 612, 618
         }

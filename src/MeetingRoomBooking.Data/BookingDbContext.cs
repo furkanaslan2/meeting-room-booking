@@ -12,6 +12,7 @@ public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbCo
     public DbSet<RoomEquipment> RoomEquipment => Set<RoomEquipment>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<ReservationParticipant> ReservationParticipants => Set<ReservationParticipant>();
+    public DbSet<ReservationAuditEntry> ReservationAuditEntries => Set<ReservationAuditEntry>();
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -94,6 +95,21 @@ public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbCo
             entity.Property(x => x.Email).HasMaxLength(255);
             entity.HasOne(x => x.Reservation).WithMany(x => x.Participants)
                 .HasForeignKey(x => x.ReservationId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ReservationAuditEntry>(entity =>
+        {
+            entity.ToTable("ReservationAuditEntries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Action).HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(x => x.OccurredUtc).HasColumnType("datetime(6)");
+            entity.Property(x => x.BeforeJson).HasColumnType("longtext");
+            entity.Property(x => x.AfterJson).HasColumnType("longtext").IsRequired();
+            entity.HasIndex(x => new { x.ReservationId, x.OccurredUtc });
+            entity.HasOne(x => x.Reservation).WithMany(x => x.AuditEntries)
+                .HasForeignKey(x => x.ReservationId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Actor).WithMany(x => x.ReservationAuditEntries)
+                .HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<RevokedToken>(entity =>
