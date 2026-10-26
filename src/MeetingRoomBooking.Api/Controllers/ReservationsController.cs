@@ -45,6 +45,19 @@ public sealed class ReservationsController(IReservationService reservationServic
         return StatusCode(StatusCodes.Status201Created, result);
     }
 
+    [HttpPost("recurring")]
+    [ProducesResponseType(typeof(IReadOnlyList<ReservationInfo>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateRecurring(CreateRecurringReservationRequest request, CancellationToken cancellationToken)
+    {
+        var result = await reservationService.CreateRecurringAsync(GetActorId(), request.ToInput(),
+            request.WeekCount, cancellationToken);
+        return StatusCode(StatusCodes.Status201Created, result);
+    }
+
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(ReservationInfo), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

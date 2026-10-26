@@ -12,7 +12,7 @@ public sealed class ReservationParticipantRequest
     public string? Email { get; init; }
 }
 
-public sealed class CreateReservationRequest
+public class CreateReservationRequest
 {
     [Range(1, int.MaxValue)]
     public int RoomId { get; init; }
@@ -29,4 +29,10 @@ public sealed class CreateReservationRequest
 
     public ReservationInput ToInput() => new(RoomId, StartsAt, EndsAt, Title,
         Participants?.Select(x => new ParticipantInput(x?.Name ?? string.Empty, x?.Email)).ToList() ?? []);
+}
+
+public sealed class CreateRecurringReservationRequest : CreateReservationRequest
+{
+    [Range(2, 52)]
+    public int WeekCount { get; init; } = 6;
 }

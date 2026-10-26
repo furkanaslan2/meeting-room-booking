@@ -5,6 +5,7 @@ namespace MeetingRoomBooking.Services.Interfaces;
 public interface IReservationService
 {
     Task<ReservationInfo> CreateAsync(int organizerId, ReservationInput input, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ReservationInfo>> CreateRecurringAsync(int organizerId, ReservationInput input, int weekCount, CancellationToken cancellationToken);
     Task<PagedResult<ReservationInfo>> ListAsync(int actorId, int page, int pageSize, CancellationToken cancellationToken);
     Task<PagedResult<ReservationInfo>> MineAsync(int actorId, int page, int pageSize, CancellationToken cancellationToken);
     Task<ReservationInfo> GetAsync(int actorId, int id, CancellationToken cancellationToken);
