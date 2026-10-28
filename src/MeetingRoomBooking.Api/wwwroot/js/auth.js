@@ -35,6 +35,8 @@ function showGuest() {
   guestView.hidden = false;
   accountView.hidden = true;
   document.querySelector("#reports-link").hidden = true;
+  document.querySelector("#management-link").hidden = true;
+  document.querySelector("#team-link").hidden = true;
 }
 
 function showAccount(user) {
@@ -42,6 +44,9 @@ function showAccount(user) {
   document.querySelector("#profile-role").textContent = roleNames[user.role] || user.role;
   document.querySelector("#profile-email").textContent = user.email;
   document.querySelector("#reports-link").hidden = user.role !== "Admin" && user.role !== "OfficeManager";
+  document.querySelector("#management-link").hidden = user.role !== "Admin" && user.role !== "OfficeManager";
+  document.querySelector("#team-link").hidden = user.role !== "Admin" && user.role !== "OfficeManager";
+  document.querySelector("#team-link").textContent = user.role === "OfficeManager" ? "Ofis rezervasyonları" : "Tüm rezervasyonlar";
   guestView.hidden = true;
   accountView.hidden = false;
 }
