@@ -8,5 +8,6 @@ public interface IAuthService
     Task<AuthResult> LoginAsync(string email, string password, CancellationToken cancellationToken);
     Task LogoutAsync(string jwtId, CancellationToken cancellationToken);
     Task<UserInfo> GetUserAsync(int userId, CancellationToken cancellationToken);
+    Task<PagedResult<UserInfo>> ListUsersAsync(int page, int pageSize, CancellationToken cancellationToken);
     Task<UserInfo> ChangeRoleAsync(int userId, string role, int? officeId, CancellationToken cancellationToken);
 }
