@@ -262,6 +262,9 @@ button:focus-visible { outline: 3px solid #e9a966; outline-offset: 3px; }
 .reservation-content .page-intro h1 { max-width: 700px; }
 .selected-room { margin: 24px 0; padding: 16px 18px; border-radius: 10px; background: #eaf4ed; color: #245b48; font-weight: 700; }
 .booking-hint { margin: 12px 0 22px; color: #607a7b; font-size: 0.88rem; line-height: 1.5; }
+.recurrence-options { margin: 0 0 24px; }
+.recurrence-count { max-width: 300px; margin-top: 14px; }
+.recurrence-count .booking-hint { margin: 0; }
 .participant-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 .participant-heading h3 { margin: 0; }
 .secondary-button { padding: 9px 13px; border: 1px solid #a8c9ba; border-radius: 8px; background: #fff; color: #235b49; font-weight: 650; }

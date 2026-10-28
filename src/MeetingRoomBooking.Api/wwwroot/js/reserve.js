@@ -14,6 +14,10 @@ const endInput = document.querySelector("#booking-end");
 const participantList = document.querySelector("#participant-list");
 const addParticipantButton = document.querySelector("#add-participant");
 const bookButton = document.querySelector("#book-button");
+const repeatWeekly = document.querySelector("#repeat-weekly");
+const recurrenceCount = document.querySelector("#recurrence-count");
+const recurrenceOptions = document.querySelector("#recurrence-options");
+const weekCountInput = document.querySelector("#week-count");
 let room;
 
 function showNotice(message) {
@@ -104,6 +108,12 @@ function validateTimes(start, end) {
   return "";
 }
 
+repeatWeekly.addEventListener("change", () => {
+  recurrenceCount.hidden = !repeatWeekly.checked;
+  weekCountInput.disabled = !repeatWeekly.checked;
+  bookButton.textContent = repeatWeekly.checked ? "Tekrarlayan rezervasyonları oluştur →" : "Rezervasyonu oluştur →";
+});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   showNotice("");
@@ -124,23 +134,38 @@ form.addEventListener("submit", async (event) => {
   }
   if (participants.length + 1 > room.capacity) { showNotice("Odanın kapasitesi aşılamaz."); return; }
 
+  const isRecurring = !isEditing && repeatWeekly.checked;
+  const weekCount = Number(weekCountInput.value);
+  if (isRecurring && (!Number.isInteger(weekCount) || weekCount < 2 || weekCount > 52)) {
+    showNotice("Hafta sayısı 2 ile 52 arasında tam sayı olmalıdır.");
+    return;
+  }
+
   bookButton.disabled = true;
   bookButton.textContent = "Kaydediliyor...";
   try {
-    const result = await apiRequest(isEditing ? `/api/reservations/${reservationId}` : "/api/reservations", {
+    const result = await apiRequest(isEditing ? `/api/reservations/${reservationId}` :
+      isRecurring ? "/api/reservations/recurring" : "/api/reservations", {
       method: isEditing ? "PUT" : "POST", body: {
-        roomId: room.id, title, startsAt: `${start}:00+03:00`, endsAt: `${end}:00+03:00`, participants
+        roomId: room.id, title, startsAt: `${start}:00+03:00`, endsAt: `${end}:00+03:00`, participants,
+        ...(isRecurring ? { weekCount } : {})
       }
     });
     panel.hidden = true;
+    const first = isRecurring ? result[0] : result;
+    const last = isRecurring ? result[result.length - 1] : null;
+    if (isRecurring) document.querySelector("#success-title").textContent = "Haftalık rezervasyonlar oluşturuldu.";
     document.querySelector("#booking-summary").textContent =
-      `${room.name} · ${turkeyDisplay(result.startsAtUtc)} – ${turkeyDisplay(result.endsAtUtc)} · Rezervasyon #${result.id}`;
+      isRecurring
+        ? `${room.name} · ${result.length} hafta · İlk: ${turkeyDisplay(first.startsAtUtc)} · Son: ${turkeyDisplay(last.startsAtUtc)}`
+        : `${room.name} · ${turkeyDisplay(first.startsAtUtc)} – ${turkeyDisplay(first.endsAtUtc)} · Rezervasyon #${first.id}`;
     document.querySelector("#booking-success").hidden = false;
   } catch (error) {
     if (error.status === 401) { location.replace("/"); return; }
     showNotice(error.message || "Rezervasyon oluşturulamadı.");
     bookButton.disabled = false;
-    bookButton.textContent = isEditing ? "Değişiklikleri kaydet →" : "Rezervasyonu oluştur →";
+    bookButton.textContent = isEditing ? "Değişiklikleri kaydet →" :
+      isRecurring ? "Tekrarlayan rezervasyonları oluştur →" : "Rezervasyonu oluştur →";
   }
 });
 
@@ -196,6 +221,7 @@ async function initialize() {
       document.querySelector("#page-title").textContent = "Toplantınızı güncelleyin.";
       document.querySelector("#booking-title").textContent = "Rezervasyon bilgilerini düzenle";
       document.querySelector("#success-title").textContent = "Değişiklikler kaydedildi.";
+      recurrenceOptions.hidden = true;
       titleInput.value = reservation.title;
       startInput.value = turkeyInput(reservation.startsAtUtc);
       endInput.value = turkeyInput(reservation.endsAtUtc);
