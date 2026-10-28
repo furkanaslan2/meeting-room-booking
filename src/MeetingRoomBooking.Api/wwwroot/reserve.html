@@ -40,6 +40,14 @@
           <div class="field"><label for="booking-end">Bitiş (Türkiye saati)</label><input id="booking-end" type="datetime-local" step="60" required></div>
         </div>
         <p class="booking-hint">Aynı gün 08:00–20:00 arasında olmalı. Kişi sayısına toplantıyı düzenleyen siz de dahilsiniz.</p>
+        <div id="recurrence-options" class="recurrence-options">
+          <label class="checkbox-label" for="repeat-weekly"><input id="repeat-weekly" type="checkbox"> Her hafta tekrarla</label>
+          <div id="recurrence-count" class="field recurrence-count" hidden>
+            <label for="week-count">Kaç hafta? (ilk hafta dahil)</label>
+            <input id="week-count" type="number" min="2" max="52" step="1" value="6" disabled>
+            <p class="booking-hint">Aynı gün ve saatte 2–52 hafta. Bir hafta doluysa hiçbir rezervasyon oluşturulmaz.</p>
+          </div>
+        </div>
         <div class="participant-heading"><h3>Katılımcılar</h3><button id="add-participant" class="secondary-button" type="button">+ Katılımcı ekle</button></div>
         <p id="capacity-hint" class="booking-hint"></p>
         <div id="participant-list" class="participant-list"></div>
