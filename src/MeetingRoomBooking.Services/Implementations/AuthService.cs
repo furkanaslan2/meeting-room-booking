@@ -81,6 +81,15 @@ public sealed class AuthService(BookingDbContext database, IPasswordHasher<User>
         return ToUserInfo(user);
     }
 
+    public async Task<PagedResult<UserInfo>> ListUsersAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var query = database.Users.AsNoTracking();
+        var total = await query.CountAsync(cancellationToken);
+        var users = await query.OrderBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize)
+            .ToListAsync(cancellationToken);
+        return new PagedResult<UserInfo>(users.Select(ToUserInfo).ToList(), page, pageSize, total);
+    }
+
     public async Task<UserInfo> ChangeRoleAsync(int userId, string role, int? officeId, CancellationToken cancellationToken)
     {
         if (!Enum.GetNames<UserRole>().Contains(role, StringComparer.Ordinal))

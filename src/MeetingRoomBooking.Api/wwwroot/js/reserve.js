@@ -5,6 +5,7 @@ const params = new URLSearchParams(location.search);
 const roomId = Number(params.get("roomId"));
 const isEditing = params.has("reservationId");
 const reservationId = Number(params.get("reservationId"));
+const fromTeamView = params.get("view") === "team";
 const notice = document.querySelector("#booking-notice");
 const panel = document.querySelector("#booking-panel");
 const form = document.querySelector("#booking-form");
@@ -221,6 +222,12 @@ async function initialize() {
       document.querySelector("#page-title").textContent = "Toplantınızı güncelleyin.";
       document.querySelector("#booking-title").textContent = "Rezervasyon bilgilerini düzenle";
       document.querySelector("#success-title").textContent = "Değişiklikler kaydedildi.";
+      if (fromTeamView) {
+        const link = document.querySelector("#booking-success-link");
+        link.href = "/reservations.html";
+        link.textContent = user.role === "OfficeManager" ?
+          "Ofis rezervasyonlarını görüntüle →" : "Tüm rezervasyonları görüntüle →";
+      }
       recurrenceOptions.hidden = true;
       titleInput.value = reservation.title;
       startInput.value = turkeyInput(reservation.startsAtUtc);

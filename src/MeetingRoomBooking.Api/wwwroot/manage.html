@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Ofis ve oda yönetimi | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/manage.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a href="/rooms.html">Odalar</a>
+        <a href="/mine.html">Rezervasyonlarım</a>
+        <span class="nav-current" aria-current="page" data-management-link>Yönetim</span>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">YÖNETİM</span>
+      <h1 id="page-title">Ofis ve oda yönetimi</h1>
+      <p id="page-description">Ofisleri, odaları, ekipmanları ve kullanıcı rollerini buradan yönetebilirsiniz.</p>
+    </section>
+    <p id="management-notice" class="notice" role="alert" aria-live="polite" hidden></p>
+
+    <section id="office-panel" class="filter-panel management-section" aria-labelledby="office-title" hidden>
+      <div class="section-heading"><h2 id="office-title">Ofisler</h2></div>
+      <form id="office-form" class="management-form">
+        <div class="field"><label for="office-name">Ofis adı</label><input id="office-name" type="text" minlength="2" maxlength="120" required></div>
+        <div class="field"><label for="office-city">Şehir</label><input id="office-city" type="text" minlength="2" maxlength="120" required></div>
+        <button id="office-submit" class="primary-button" type="submit">Ofis ekle</button>
+        <button id="office-cancel" class="secondary-button" type="button" hidden>Düzenlemeyi iptal et</button>
+      </form>
+      <div id="office-list" class="management-list" aria-live="polite"></div>
+    </section>
+
+    <section id="equipment-panel" class="filter-panel management-section" aria-labelledby="equipment-title" hidden>
+      <div class="section-heading"><h2 id="equipment-title">Ekipmanlar</h2></div>
+      <form id="equipment-form" class="management-form">
+        <div class="field"><label for="equipment-name">Yeni ekipman adı</label><input id="equipment-name" type="text" minlength="2" maxlength="100" required></div>
+        <button id="equipment-submit" class="primary-button" type="submit">Ekipman ekle</button>
+      </form>
+      <p id="equipment-list" class="booking-hint"></p>
+    </section>
+
+    <section id="users-panel" class="filter-panel management-section" aria-labelledby="users-title" hidden>
+      <div class="section-heading"><h2 id="users-title">Kullanıcı rolleri</h2><span id="users-count" role="status"></span></div>
+      <p class="booking-hint">Bir kullanıcıyı ofis yöneticisi yaparken görev yapacağı ofisi seçin.</p>
+      <div id="users-list" class="management-list" aria-live="polite"></div>
+      <div id="users-pagination" class="pagination" hidden>
+        <button id="users-previous" type="button">← Önceki</button>
+        <span id="users-page"></span>
+        <button id="users-next" type="button">Sonraki →</button>
+      </div>
+    </section>
+
+    <section id="room-panel" class="filter-panel management-section" aria-labelledby="room-title" hidden>
+      <div class="section-heading"><h2 id="room-title">Odalar</h2><span id="room-count" role="status"></span></div>
+      <div id="room-filter-field" class="field management-filter" hidden>
+        <label for="room-filter-office">Ofise göre listele</label>
+        <select id="room-filter-office"><option value="">Tüm ofisler</option></select>
+      </div>
+      <form id="room-form" class="management-room-form">
+        <div class="field"><label for="room-office">Ofis</label><select id="room-office" required></select></div>
+        <div class="field"><label for="room-name">Oda adı</label><input id="room-name" type="text" minlength="2" maxlength="120" required></div>
+        <div class="field"><label for="room-capacity">Kapasite</label><input id="room-capacity" type="number" min="1" step="1" required></div>
+        <div class="field"><label for="room-floor">Kat</label><input id="room-floor" type="number" step="1" required></div>
+        <fieldset class="management-fieldset"><legend>Ekipman</legend><div id="room-equipment" class="management-equipment"></div></fieldset>
+        <label class="checkbox-label management-active"><input id="room-active" type="checkbox" checked> Oda aktif</label>
+        <div class="management-actions">
+          <button id="room-submit" class="primary-button" type="submit">Oda ekle</button>
+          <button id="room-cancel" class="secondary-button" type="button" hidden>Düzenlemeyi iptal et</button>
+        </div>
+      </form>
+      <div id="managed-room-list" class="management-list" aria-live="polite"></div>
+      <div id="management-pagination" class="pagination" hidden>
+        <button id="management-previous" type="button">← Önceki</button>
+        <span id="management-page"></span>
+        <button id="management-next" type="button">Sonraki →</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

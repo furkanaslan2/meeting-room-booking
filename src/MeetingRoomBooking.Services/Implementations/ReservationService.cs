@@ -116,7 +116,7 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
     {
         var actor = await GetActorAsync(actorId, cancellationToken);
         var reservation = await database.Reservations.AsNoTracking()
-            .Include(x => x.Room).Include(x => x.Participants)
+            .Include(x => x.Room).Include(x => x.Participants).Include(x => x.Organizer)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new ServiceException(404, "RESERVATION_NOT_FOUND", "Rezervasyon bulunamadı.");
         EnsureCanManage(actor, reservation);
@@ -244,7 +244,7 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         var total = await query.CountAsync(cancellationToken);
         var items = await query.OrderByDescending(x => x.StartUtc).ThenBy(x => x.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Include(x => x.Participants).ToListAsync(cancellationToken);
+            .Include(x => x.Participants).Include(x => x.Organizer).ToListAsync(cancellationToken);
         return new PagedResult<ReservationInfo>(items.Select(ToInfo).ToList(), page, pageSize, total);
     }
 
@@ -304,7 +304,8 @@ public sealed class ReservationService(BookingDbContext database, RoomLockReposi
         new DateTimeOffset(DateTime.SpecifyKind(reservation.StartUtc, DateTimeKind.Utc)),
         new DateTimeOffset(DateTime.SpecifyKind(reservation.EndUtc, DateTimeKind.Utc)),
         reservation.Status.ToString(), reservation.Participants.OrderBy(x => x.Id)
-            .Select(x => new ParticipantInfo(x.Id, x.Name, x.Email)).ToList());
+            .Select(x => new ParticipantInfo(x.Id, x.Name, x.Email)).ToList(),
+        reservation.Organizer?.FullName);
 
     private static DateTimeOffset AsUtc(DateTime value) =>
         new(DateTime.SpecifyKind(value, DateTimeKind.Utc));

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14333b">
+  <title>Rezervasyon işlem geçmişi | Meetspace</title>
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/history.js"></script>
+</head>
+<body class="app-page">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand app-brand" href="/"><span class="brand-mark" aria-hidden="true">◈</span> Meetspace</a>
+      <nav class="app-nav" aria-label="Ana menü">
+        <a href="/rooms.html">Odalar</a>
+        <a href="/mine.html">Rezervasyonlarım</a>
+        <span class="nav-current" aria-current="page">İşlem geçmişi</span>
+        <a href="/">Hesabım</a>
+      </nav>
+      <div class="app-user"><span id="user-role"></span><button id="sign-out" type="button">Çıkış</button></div>
+    </div>
+  </header>
+
+  <main class="app-content reservation-content">
+    <section class="page-intro" aria-labelledby="page-title">
+      <span class="eyebrow accent">İŞLEM GEÇMİŞİ</span>
+      <h1 id="page-title">Rezervasyon geçmişi</h1>
+      <p id="history-reservation">Kayıt yükleniyor...</p>
+    </section>
+    <p id="history-notice" class="notice" role="alert" hidden></p>
+    <section id="history-panel" class="filter-panel" aria-labelledby="history-title" hidden>
+      <div class="section-heading"><h2 id="history-title">Değişiklikler</h2><span id="history-count" role="status"></span></div>
+      <div class="management-actions">
+        <a id="history-back" class="secondary-button" href="/mine.html">← Rezervasyonlara dön</a>
+        <button id="history-refresh" class="secondary-button" type="button">Yenile</button>
+      </div>
+      <div id="history-list" class="reservation-list management-history"></div>
+      <p id="history-empty" class="empty-message" hidden>Bu rezervasyon için kayıtlı işlem geçmişi yok. Geçmiş özelliği eklenmeden önceki işlemler geriye dönük gösterilemez.</p>
+      <div id="history-pagination" class="pagination" hidden>
+        <button id="history-previous" type="button">← Önceki</button>
+        <span id="history-page"></span>
+        <button id="history-next" type="button">Sonraki →</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

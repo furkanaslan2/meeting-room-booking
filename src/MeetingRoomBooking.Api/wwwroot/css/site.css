@@ -322,6 +322,25 @@ button:focus-visible { outline: 3px solid #e9a966; outline-offset: 3px; }
 .usage-meter { display: block; width: 115px; height: 6px; margin-top: 7px; overflow: hidden; border-radius: 6px; background: #e5ede7; }
 .usage-meter span { display: block; height: 100%; border-radius: inherit; background: #29836b; }
 
+.management-section { margin-bottom: 24px; }
+.management-form { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; margin: 22px 0; }
+.management-form .field { flex: 1 1 180px; }
+.management-form .primary-button { min-height: 46px; }
+.management-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.management-card { padding: 19px; border: 1px solid #dce7df; border-radius: 12px; background: #fbfcf9; }
+.management-card h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.management-card p { margin: 6px 0; color: #526b6c; font-size: 0.9rem; }
+.management-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+.management-filter { max-width: 280px; margin: 20px 0; }
+.management-room-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px; border: 1px solid #dce7df; border-radius: 12px; background: #fbfcf9; }
+.management-fieldset { grid-column: 1 / -1; min-width: 0; padding: 12px; border: 1px solid #ccdad2; border-radius: 8px; }
+.management-fieldset legend { padding: 0 5px; font-size: 0.85rem; font-weight: 700; }
+.management-equipment { display: flex; flex-wrap: wrap; gap: 12px 22px; }
+.management-active { align-self: center; }
+.management-room-form .management-actions { margin-top: 0; }
+.management-user-form { display: grid; gap: 12px; margin-top: 14px; }
+.management-history { margin-top: 22px; }
+
 @media (max-width: 860px) {
   .shell { grid-template-columns: 1fr; }
   .intro { min-height: auto; padding: 28px; }
@@ -348,4 +367,6 @@ button:focus-visible { outline: 3px solid #e9a966; outline-offset: 3px; }
   .participant-row { grid-template-columns: 1fr; }
   .calendar-buttons { width: 100%; }
   .report-toolbar .field, .report-toolbar p { width: 100%; }
+  .management-list, .management-room-form { grid-template-columns: 1fr; }
+  .management-form .field, .management-form .primary-button { flex-basis: 100%; }
 }

@@ -74,6 +74,7 @@ Uygulama ilk açıldığında 2 ofis, 8 oda, 3 kullanıcı ve 2 örnek rezervasy
 | `POST /api/auth/login` | Giriş yapar, 1 saatlik JWT verir (`email`, `password`) | Herkes |
 | `GET /api/auth/me` | Giriş yapan kullanıcıyı gösterir | Giriş gerekli |
 | `POST /api/auth/logout` | Gönderilen JWT'yi geçersiz kılar | Giriş gerekli |
+| `GET /api/users?page=1&pageSize=10` | Kullanıcıları yalnızca ad, e-posta, rol ve ofisleriyle sayfalı listeler | Yalnızca Admin |
 | `PUT /api/users/{id}/role` | Rolü değiştirir (`role`, yönetici için gerekirse `officeId`) | Yalnızca Admin |
 
 Swagger'da önce `POST /api/auth/login` ile giriş yap. Dönen yanıttaki `token` değerini kopyala; sağ üstteki **Authorize** düğmesine yalnızca token'ı yapıştır. Yetki gerektiren endpoint'leri bundan sonra deneyebilirsin. Yanlış rol 403, eksik veya geçersiz token 401 döner. Rol değişince eski token artık kullanılamaz; kullanıcı yeni rolü için tekrar giriş yapar.
@@ -149,6 +150,12 @@ Konsol logu gerçek bir e-posta veya kalıcı bildirim değildir. Veritabanında
 
 Arayüzde Admin ve Ofis Yöneticisi hesaplarında **Raporlar** bağlantısı görünür; Çalışan hesabında görünmez. `/reports.html` sayfası oda sıralamasını, rezervasyon sayısını, dolu dakika ve doluluk yüzdesini sayfalı olarak gösterir. Admin ofis seçebilir; Ofis Yöneticisi yalnızca kendi ofisini görür. Dar ekranda tablo yatay kaydırılır. Görünür bağlantı rol içindir; asıl yetki denetimi API'deki 403 kuralıdır.
 
+### Ofis ve oda yönetimi arayüzü
+
+Admin ve Ofis Yöneticisi **Yönetim** bağlantısından `/manage.html` sayfasına gider. Admin ofis ekleyebilir, düzenleyebilir, silebilir ve ekipman ekleyebilir. İki rol oda ekleyebilir, adını, kapasitesini, katını, aktifliğini ve ekipmanlarını güncelleyebilir ya da odayı silebilir. Ofis Yöneticisinin oda listesi ve ofis seçimi yalnızca kendi ofisiyle sınırlıdır. Oda listesi sayfalıdır; Admin ofise göre filtreler. Rezervasyonu bulunan oda veya odaları olan ofis silinmeye çalışılırsa API hata mesajı sayfada gösterilir. Tarayıcıdaki rol menüsü kolaylık içindir; tüm yetki ve ofis kapsamı kontrolleri API'de kalır.
+
+Admin aynı sayfada kullanıcıları sayfalı listeler ve kendi hesabı dışındaki kullanıcıların rolünü ve ofisini düzenleyebilir. Şifreler liste yanıtında yer almaz. Ofis Yöneticisi ve Admin, **Tüm rezervasyonlar** sayfasında yalnızca API'nin yetki verdiği kayıtları görür; gelecekteki aktif kayıtları düzenleyip iptal edebilir. Her iki rezervasyon listesinde **İşlem geçmişi** bağlantısı, kaydı kimin ne zaman oluşturduğunu, düzenlediğini veya iptal ettiğini Türkiye saatinde gösterir. Eski kayıtların geçmişi, audit özelliği eklenmeden önceki olayları içermez.
+
 Rapor bugün dahil son 30 takvim gününü kapsar. Doluluk oranı, bu aralıktaki gerçekleşmiş aktif rezervasyon dakikalarının Türkiye saatiyle her gün 08:00-20:00 arasındaki **geçmiş** toplam dakikalara oranıdır; bugün henüz geçmeyen mesai saatleri hesaba katılmaz. Hafta sonları da sayılır çünkü rezervasyon kuralları haftanın günlerini sınırlamaz. Gelecekteki rezervasyonlar ve iptal edilen kayıtlar sayılmaz. İptal edilmiş bir toplantının geçmişte gerçekten yapılıp yapılmadığını mevcut veri modeli söylemediğinden, iptal edildiğinde geçmiş rapordan da düşer. Rapor iki toplu veritabanı sorgusu ve bellekte toplama kullanır; değerlendirme verisi ölçeği için tasarlanmıştır.
 
 ## Arayüz: giriş ve kayıt
@@ -169,7 +176,7 @@ Oda kartındaki **Haftalık takvim** bağlantısı `/calendar.html?roomId=...` s
 
 ## Bilinen sınırlar ve teslim
 
-- Ofis, oda, ekipman ve kullanıcı rolü yönetimi API üzerinden ve Swagger'da yapılır; bunlar için ayrı bir yönetim sayfası yoktur. PDF'de zorunlu tutulan kullanıcı arayüzü ekranları giriş/kayıt, oda listesi, rezervasyon formu, Rezervasyonlarım, haftalık takvim ve role göre menüdür.
+- Hatırlatma bonusu konsol/log çıktısı üretir; web tarayıcısında veya e-posta yoluyla bildirim göndermez. PDF bu bonus için konsol/log çıktısına izin verir.
 - İptal işleminin diğer yazma işlemleriyle eşzamanlı etkileşimi ayrı bir otomatik testle doğrulanmadı.
 - Rapor, iptal edilen geçmiş rezervasyonların gerçekleşip gerçekleşmediğini belirleyemez; iptal edilenleri saymaz. Veritabanına uygulamayı atlayarak doğrudan yazan başka bir istemci, uygulamadaki oda kilidi kuralını kullanmaz.
 - Demo videosu repo dosyası olarak eklenmez. Teslim e-postasında GitHub repo bağlantısıyla birlikte erişilebilir demo video bağlantısı paylaşılır. Videoda üç rol, oda araması, rezervasyon ve çakışma hatası, Rezervasyonlarım, haftalık takvim ve yönetici raporu gösterilebilir. Gerçek MySQL/JWT/test kullanıcı şifreleri videoda gösterilmemelidir.

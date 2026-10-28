@@ -1,6 +1,7 @@
 import { apiRequest, clearToken, getToken } from "./api.js";
 import { applyRoleMenu } from "./role-menu.js";
 
+const isTeamView = location.pathname === "/reservations.html";
 const notice = document.querySelector("#mine-notice");
 const list = document.querySelector("#reservation-list");
 const emptyMessage = document.querySelector("#empty-message");
@@ -64,13 +65,29 @@ function renderReservation(reservation, roomName) {
     : "Katılımcı eklenmedi";
   card.append(top, heading, date, guests);
 
+  if (isTeamView) {
+    const organizer = document.createElement("p");
+    organizer.className = "reservation-guests";
+    organizer.textContent = `Düzenleyen: ${reservation.organizerFullName || `Kullanıcı #${reservation.organizerUserId}`}`;
+    card.append(organizer);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "reservation-actions";
+  const history = document.createElement("a");
+  history.className = "secondary-button";
+  history.href = `/history.html?${new URLSearchParams({
+    reservationId: String(reservation.id), ...(isTeamView ? { view: "team" } : {})
+  })}`;
+  history.textContent = "İşlem geçmişi";
+  actions.append(history);
+
   if (reservation.status === "Active" && Date.parse(reservation.startsAtUtc) > Date.now()) {
-    const actions = document.createElement("div");
-    actions.className = "reservation-actions";
     const edit = document.createElement("a");
     edit.className = "secondary-button";
     const params = new URLSearchParams({
-      roomId: String(reservation.roomId), reservationId: String(reservation.id)
+      roomId: String(reservation.roomId), reservationId: String(reservation.id),
+      ...(isTeamView ? { view: "team" } : {})
     });
     edit.href = `/reserve.html?${params}`;
     edit.textContent = "Düzenle";
@@ -93,8 +110,9 @@ function renderReservation(reservation, roomName) {
       }
     });
     actions.append(edit, cancel);
-    card.append(actions);
   }
+
+  card.append(actions);
 
   return card;
 }
@@ -109,7 +127,8 @@ async function loadReservations(preserveNotice = false) {
   nextPage.disabled = true;
   document.querySelector("#reservation-count").textContent = "Yükleniyor...";
   try {
-    const result = await apiRequest(`/api/reservations/mine?page=${page}&pageSize=${pageSize}`);
+    const path = isTeamView ? "/api/reservations" : "/api/reservations/mine";
+    const result = await apiRequest(`${path}?page=${page}&pageSize=${pageSize}`);
     const names = await Promise.all(result.items.map((item) => getRoomName(item.roomId)));
     list.replaceChildren(...result.items.map((item, index) => renderReservation(item, names[index])));
     emptyMessage.hidden = result.totalCount !== 0;
@@ -153,6 +172,16 @@ async function initialize() {
     const user = await apiRequest("/api/auth/me");
     const roleNames = { Admin: "Yönetici", OfficeManager: "Ofis yöneticisi", Employee: "Çalışan" };
     document.querySelector("#user-role").textContent = roleNames[user.role] || user.role;
+    if (isTeamView && user.role !== "Admin" && user.role !== "OfficeManager") {
+      showNotice("Bu sayfayı yalnızca Admin ve Ofis Yöneticisi kullanabilir.");
+      return;
+    }
+    if (isTeamView && user.role === "OfficeManager") {
+      document.title = "Ofis rezervasyonları | Meetspace";
+      document.querySelector("#page-title").textContent = "Ofis rezervasyonları";
+      document.querySelector("#page-description").textContent =
+        "Ofisinizdeki toplantıları görüntüleyin. Gelecekteki aktif rezervasyonları düzenleyebilir veya iptal edebilirsiniz.";
+    }
     applyRoleMenu(user);
     await loadReservations();
   } catch (error) {

@@ -10,4 +10,5 @@ public sealed record ParticipantInfo(int Id, string Name, string? Email);
 
 public sealed record ReservationInfo(
     int Id, int RoomId, int OrganizerUserId, string Title, DateTimeOffset StartsAtUtc,
-    DateTimeOffset EndsAtUtc, string Status, IReadOnlyList<ParticipantInfo> Participants);
+    DateTimeOffset EndsAtUtc, string Status, IReadOnlyList<ParticipantInfo> Participants,
+    string? OrganizerFullName = null);
